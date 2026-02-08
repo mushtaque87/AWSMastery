@@ -1,116 +1,371 @@
 
-import React, { useState } from 'react';
-import { PaperAirplaneIcon, SparklesIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  PaperAirplaneIcon, 
+  SparklesIcon, 
+  ArrowPathIcon, 
+  DocumentTextIcon, 
+  ChatBubbleBottomCenterTextIcon,
+  QueueListIcon,
+  BoltIcon, 
+  ShieldCheckIcon,
+  CircleStackIcon,
+  CpuChipIcon,
+  ArrowLongRightIcon
+} from '@heroicons/react/24/solid';
 import { matchAWSService } from '../services/gemini';
 import { ScenarioMatch } from '../types';
 
+declare global {
+  interface Window {
+    mermaid: any;
+  }
+}
+
+type MatchMode = 'conversational' | 'structured';
+
+interface Brief {
+  workload: string;
+  traffic: string;
+  latency: string;
+  persistence: string;
+  security: string;
+}
+
+const BLUEPRINTS = [
+  {
+    name: "Real-time Gaming State",
+    brief: {
+      workload: "Synchronization of player positions and inventory for a multiplayer RPG.",
+      traffic: "Highly spiky, 1M+ concurrent users at peak.",
+      latency: "Sub-10ms required for state updates.",
+      persistence: "Key-value, session-based storage.",
+      security: "Public-facing API with DDoS protection."
+    }
+  },
+  {
+    name: "Financial Audit Ledger",
+    brief: {
+      workload: "Immutable storage of transaction logs for regulatory compliance.",
+      traffic: "Steady stream of batch uploads every hour.",
+      latency: "Near real-time not required; consistency is priority.",
+      persistence: "Relational/ACID compliant, cryptographically verifiable.",
+      security: "Encryption at rest/transit, strict IAM, VPC isolated."
+    }
+  },
+  {
+    name: "Global Video Streaming",
+    brief: {
+      workload: "VOD content delivery and transcoding for a global audience.",
+      traffic: "High throughput, global distribution.",
+      latency: "Low time-to-first-byte (TTFB).",
+      persistence: "Massive binary objects (MP4/HLS).",
+      security: "Signed URLs, Geo-blocking, WAF protection."
+    }
+  }
+];
+
+const MermaidDiagram: React.FC<{ definition: string }> = ({ definition }) => {
+  const [svg, setSvg] = useState<string>('');
+  const [error, setError] = useState<boolean>(false);
+
+  useEffect(() => {
+    const renderDiagram = async () => {
+      if (!definition || !window.mermaid) return;
+
+      try {
+        setError(false);
+        // Initialize mermaid with specific enterprise styling
+        window.mermaid.initialize({ 
+          startOnLoad: false, 
+          theme: 'dark',
+          securityLevel: 'loose',
+          fontFamily: 'Inter',
+          themeVariables: {
+            primaryColor: '#3b82f6',
+            primaryTextColor: '#fff',
+            lineColor: '#6366f1',
+            secondaryColor: '#1e293b',
+            tertiaryColor: '#0f172a',
+            mainBkg: '#1e293b',
+            nodeBorder: '#3b82f6',
+            clusterBkg: '#0f172a',
+            clusterBorder: '#1e293b',
+            defaultLinkColor: '#6366f1'
+          }
+        });
+
+        // Generate a unique ID for the diagram
+        const id = `mermaid-diag-${Math.random().toString(36).substring(2, 9)}`;
+        
+        // Use the async render method
+        const { svg: svgCode } = await window.mermaid.render(id, definition);
+        setSvg(svgCode);
+      } catch (err) {
+        console.error("Mermaid rendering failed:", err);
+        setError(true);
+      }
+    };
+
+    renderDiagram();
+  }, [definition]);
+
+  if (error) {
+    return (
+      <div className="bg-slate-900/50 rounded-2xl p-8 border border-rose-500/20 flex flex-col items-center justify-center text-center">
+        <p className="text-rose-400 font-bold mb-2">Diagram Rendering Error</p>
+        <p className="text-slate-500 text-xs font-mono max-w-xs break-all opacity-50">{definition}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="bg-slate-900/50 rounded-[2rem] p-8 border border-white/5 overflow-x-auto min-h-[400px] flex items-center justify-center shadow-inner"
+      dangerouslySetInnerHTML={{ __html: svg || '<div class="animate-pulse flex space-y-4 flex-col items-center"><div class="rounded-full bg-slate-800 h-10 w-10"></div><div class="h-2 bg-slate-800 rounded w-32"></div></div>' }}
+    />
+  );
+};
+
 const ServiceMatcher: React.FC = () => {
+  const [mode, setMode] = useState<MatchMode>('conversational');
   const [scenario, setScenario] = useState('');
+  const [brief, setBrief] = useState<Brief>({
+    workload: '',
+    traffic: '',
+    latency: '',
+    persistence: '',
+    security: ''
+  });
   const [result, setResult] = useState<ScenarioMatch | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const handleApplyBlueprint = (blueprint: typeof BLUEPRINTS[0]) => {
+    setMode('structured');
+    setBrief(blueprint.brief);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!scenario.trim()) return;
+    
+    let finalPrompt = '';
+    if (mode === 'conversational') {
+      if (!scenario.trim()) return;
+      finalPrompt = scenario;
+    } else {
+      if (!brief.workload.trim()) return;
+      finalPrompt = `
+        WORKLOAD: ${brief.workload}
+        TRAFFIC PROFILE: ${brief.traffic}
+        LATENCY REQ: ${brief.latency}
+        PERSISTENCE: ${brief.persistence}
+        SECURITY POSTURE: ${brief.security}
+      `;
+    }
     
     setLoading(true);
     setResult(null);
     try {
-      const match = await matchAWSService(scenario);
+      const match = await matchAWSService(finalPrompt);
       setResult(match);
     } catch (error) {
       console.error(error);
+      alert("Failed to generate architecture. Please check your prompt and try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn">
-      <div className="glass p-10 rounded-[2.5rem] border border-blue-500/20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
-        
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <SparklesIcon className="w-6 h-6 text-blue-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-white">AI Service Matcher</h2>
-          </div>
-          
-          <p className="text-slate-400 mb-8 text-lg">
-            Describe your business requirement or technical bottleneck. Our Lead Architect AI will recommend the 2026-standard AWS service.
-          </p>
+    <div className="max-w-6xl mx-auto space-y-12 animate-fadeIn">
+      {/* Mode Selector & Blueprints */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="flex p-1.5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
+          <button
+            onClick={() => setMode('conversational')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${mode === 'conversational' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:text-white'}`}
+          >
+            <ChatBubbleBottomCenterTextIcon className="w-5 h-5" /> Quick Pitch
+          </button>
+          <button
+            onClick={() => setMode('structured')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all ${mode === 'structured' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-400 hover:text-white'}`}
+          >
+            <QueueListIcon className="w-5 h-5" /> Architect's Brief
+          </button>
+        </div>
 
-          <form onSubmit={handleSubmit} className="relative mb-6">
-            <textarea
-              value={scenario}
-              onChange={(e) => setScenario(e.target.value)}
-              placeholder="e.g., I need a global database with sub-millisecond latency for real-time gaming state..."
-              className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 min-h-[140px] resize-none transition-all"
-            />
+        <div className="flex flex-wrap gap-2">
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest self-center mr-2">Blueprints:</span>
+          {BLUEPRINTS.map((bp) => (
             <button
-              type="submit"
-              disabled={loading || !scenario.trim()}
-              className="absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 text-white p-3 rounded-xl transition-all shadow-lg shadow-blue-600/20"
+              key={bp.name}
+              onClick={() => handleApplyBlueprint(bp)}
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-semibold text-slate-300 transition-all"
             >
-              {loading ? (
-                <ArrowPathIcon className="w-5 h-5 animate-spin" />
-              ) : (
-                <PaperAirplaneIcon className="w-5 h-5" />
-              )}
+              {bp.name}
             </button>
-          </form>
-
-          <div className="flex gap-4">
-            <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Recommended Samples:</p>
-            <button 
-              onClick={() => setScenario("I need to run microservices without managing servers, but I need strict hardware isolation.")}
-              className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Hardware Isolation
-            </button>
-            <button 
-              onClick={() => setScenario("I need a data lake that automatically categorizes metadata and handles PII scrubbing.")}
-              className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Data Lake Metadata
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {result && (
-        <div className="glass p-10 rounded-[2.5rem] border border-emerald-500/20 animate-fadeIn bg-emerald-500/[0.02]">
-          <div className="flex flex-col md:flex-row gap-10">
-            <div className="flex-1">
-              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">Recommended Service</h4>
-              <p className="text-4xl font-extrabold text-white mb-6 tracking-tight">{result.recommendedService}</p>
-              
-              <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">Architect's Justification</h4>
-              <p className="text-slate-300 leading-relaxed text-lg mb-8">
-                {result.justification}
-              </p>
+      <div className="glass p-8 md:p-12 rounded-[3rem] border border-blue-500/20 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        
+        <form onSubmit={handleSubmit} className="relative space-y-10">
+          {mode === 'conversational' ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <DocumentTextIcon className="w-6 h-6 text-blue-400" />
+                <h3 className="text-2xl font-bold text-white tracking-tight">Enterprise Requirement</h3>
+              </div>
+              <textarea
+                value={scenario}
+                onChange={(e) => setScenario(e.target.value)}
+                placeholder="Describe your enterprise workload requirements..."
+                className="w-full bg-black/30 border border-white/10 rounded-3xl p-8 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 min-h-[220px] transition-all text-xl leading-relaxed shadow-inner"
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="md:col-span-2 space-y-3">
+                <label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
+                  <BoltIcon className="w-4 h-4 text-blue-400" /> Core Workload Logic
+                </label>
+                <input
+                  value={brief.workload}
+                  onChange={(e) => setBrief({...brief, workload: e.target.value})}
+                  placeholder="Primary objective of this system"
+                  className="w-full bg-black/20 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all text-lg"
+                />
+              </div>
 
-              {result.alternatives && result.alternatives.length > 0 && (
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
+                  <CpuChipIcon className="w-4 h-4 text-indigo-400" /> Scalability Profile
+                </label>
+                <input
+                  value={brief.traffic}
+                  onChange={(e) => setBrief({...brief, traffic: e.target.value})}
+                  placeholder="Requests/sec, global spread"
+                  className="w-full bg-black/20 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
+                  <BoltIcon className="w-4 h-4 text-amber-400" /> SLA & Latency
+                </label>
+                <input
+                  value={brief.latency}
+                  onChange={(e) => setBrief({...brief, latency: e.target.value})}
+                  placeholder="User experience requirements"
+                  className="w-full bg-black/20 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
+                  <CircleStackIcon className="w-4 h-4 text-emerald-400" /> Storage Strategy
+                </label>
+                <input
+                  value={brief.persistence}
+                  onChange={(e) => setBrief({...brief, persistence: e.target.value})}
+                  placeholder="Consistency, Volume, Type"
+                  className="w-full bg-black/20 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
+                  <ShieldCheckIcon className="w-4 h-4 text-rose-400" /> Compliance & Security
+                </label>
+                <input
+                  value={brief.security}
+                  onChange={(e) => setBrief({...brief, security: e.target.value})}
+                  placeholder="IAM, VPC, Regulatory needs"
+                  className="w-full bg-black/20 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative flex items-center gap-4 px-12 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-[2rem] font-black text-lg shadow-2xl shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            >
+              {loading ? (
+                <>Analyzing Stack <ArrowPathIcon className="w-7 h-7 animate-spin" /></>
+              ) : (
+                <>Submit to Architect Board <SparklesIcon className="w-7 h-7" /></>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {result && (
+        <div className="space-y-12 animate-fadeIn">
+          {/* Main Hero Result */}
+          <div className="glass p-12 rounded-[4rem] border border-emerald-500/20 bg-emerald-500/[0.02]">
+            <div className="flex flex-col lg:flex-row gap-16">
+              <div className="flex-1 space-y-10">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Alternative Considerations</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {result.alternatives.map(alt => (
-                      <span key={alt} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-slate-400">
-                        {alt}
-                      </span>
-                    ))}
+                  <h4 className="text-xs font-black text-emerald-400 uppercase tracking-[0.4em] mb-6">Principal Recommendation</h4>
+                  <p className="text-6xl font-black text-white tracking-tighter leading-none mb-8">
+                    {result.recommendedService}
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-blue-400 uppercase tracking-[0.4em]">Strategic Justification</h4>
+                  <p className="text-slate-300 leading-relaxed text-2xl font-light italic border-l-[6px] border-blue-500/30 pl-8 py-2">
+                    {result.justification}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-white/10">
+                  <div>
+                    <h4 className="text-xs font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Alternatives Considered</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {result.alternatives?.map(alt => (
+                        <span key={alt} className="px-4 py-2 bg-white/5 border border-white/5 rounded-xl text-xs text-slate-400 font-bold uppercase tracking-wider">{alt}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center justify-center p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10">
+                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-2">Architectural Confidence</span>
+                    <span className="text-4xl font-black text-white">98%</span>
                   </div>
                 </div>
-              )}
-            </div>
-            
-            <div className="w-full md:w-64 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-white/10 pt-10 md:pt-0 md:pl-10">
-              <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-4">
-                <SparklesIcon className="w-10 h-10 text-blue-400" />
               </div>
-              <p className="text-center text-sm font-medium text-slate-400">This recommendation is based on AWS 2026 Best Practices</p>
+
+              {/* Diagram Section */}
+              <div className="w-full lg:w-1/2 space-y-6">
+                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] mb-4 text-center">Service Architecture Flow</h4>
+                 <MermaidDiagram definition={result.mermaidDiagram} />
+              </div>
+            </div>
+          </div>
+
+          {/* Detailed Implementation Roadmap */}
+          <div className="glass p-12 rounded-[4rem] border border-indigo-500/20">
+            <h4 className="text-xs font-black text-indigo-400 uppercase tracking-[0.4em] mb-12 text-center">Step-by-Step Implementation Plan</h4>
+            <div className="space-y-10 relative">
+              <div className="absolute left-8 top-0 bottom-0 w-[2px] bg-indigo-500/20 hidden md:block" />
+              {result.implementationSteps.map((step, idx) => (
+                <div key={idx} className="relative flex flex-col md:flex-row gap-8 items-start group">
+                  <div className="hidden md:flex w-16 h-16 rounded-2xl bg-slate-900 border border-indigo-500/40 items-center justify-center z-10 shrink-0 group-hover:bg-indigo-600 group-hover:border-indigo-400 transition-all">
+                    <span className="text-xl font-black text-white">{idx + 1}</span>
+                  </div>
+                  <div className="flex-1 bg-white/5 border border-white/5 rounded-3xl p-8 group-hover:bg-white/10 transition-all">
+                    <h5 className="text-xl font-bold text-indigo-300 mb-3">{step.phase}</h5>
+                    <p className="text-slate-400 leading-relaxed">{step.details}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

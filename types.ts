@@ -12,6 +12,11 @@ export interface AWSModule {
 export interface ScenarioMatch {
   recommendedService: string;
   justification: string;
+  implementationSteps: {
+    phase: string;
+    details: string;
+  }[];
+  mermaidDiagram: string;
   alternatives?: string[];
 }
 

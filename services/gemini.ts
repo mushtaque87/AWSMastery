@@ -3,13 +3,19 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { ScenarioMatch, ArchitectureReview } from "../types";
 
 export const matchAWSService = async (scenario: string): Promise<ScenarioMatch> => {
-  // Use strictly named parameter for API key as per guidelines
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: `Acting as a Lead AWS Solutions Architect, recommend the best service for this scenario: "${scenario}". 
-    Consider modern 2026 AWS practices (Serverless first, Event-driven, AI-integrated).`,
+    // Upgrading to gemini-3-pro-preview for board-level reasoning tasks
+    model: 'gemini-3-pro-preview',
+    contents: `You are a Principal AWS Solutions Architect. For the following scenario, provide a Board-Level architectural design: "${scenario}". 
+    
+    Requirements:
+    1. A clear 'recommendedService'.
+    2. A deep 'justification' explaining the 2026-era benefits.
+    3. A multi-phase 'implementationSteps' list (Phase name + Technical details).
+    4. A Mermaid.js diagram (graph TD or sequenceDiagram) representing the service flow. Ensure valid Mermaid syntax.
+    5. 'alternatives' for trade-off discussions.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -17,34 +23,40 @@ export const matchAWSService = async (scenario: string): Promise<ScenarioMatch> 
         properties: {
           recommendedService: { type: Type.STRING },
           justification: { type: Type.STRING },
+          implementationSteps: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                phase: { type: Type.STRING },
+                details: { type: Type.STRING }
+              },
+              required: ["phase", "details"]
+            }
+          },
+          mermaidDiagram: { type: Type.STRING, description: "A valid Mermaid.js diagram string" },
           alternatives: {
             type: Type.ARRAY,
             items: { type: Type.STRING }
           }
         },
-        required: ["recommendedService", "justification"]
+        required: ["recommendedService", "justification", "implementationSteps", "mermaidDiagram"]
       }
     }
   });
 
   try {
-    // Accessing text property directly (not calling it as a method)
     return JSON.parse(response.text || "{}");
   } catch (e) {
     console.error("Failed to parse Gemini response", e);
-    return {
-      recommendedService: "AWS Well-Architected Review",
-      justification: "The requirement was ambiguous; consult the framework to refine your architecture."
-    };
+    throw new Error("Architecture generation failed. Please try again.");
   }
 };
 
 export const reviewArchitecture = async (description: string): Promise<ArchitectureReview> => {
-  // Use strictly named parameter for API key as per guidelines
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const response = await ai.models.generateContent({
-    // Use gemini-3-pro-preview for complex reasoning tasks like architectural reviews
     model: 'gemini-3-pro-preview',
     contents: `Review the following AWS architecture against the 6 Pillars of the Well-Architected Framework: "${description}". 
     Be critical, professional, and focus on 2026 standards.`,
@@ -77,7 +89,6 @@ export const reviewArchitecture = async (description: string): Promise<Architect
   });
 
   try {
-    // Accessing text property directly (not calling it as a method)
     const text = response.text;
     if (!text) throw new Error("No response text found");
     return JSON.parse(text);
