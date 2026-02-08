@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  PaperAirplaneIcon, 
   SparklesIcon, 
   ArrowPathIcon, 
   DocumentTextIcon, 
@@ -11,10 +10,14 @@ import {
   ShieldCheckIcon,
   CircleStackIcon,
   CpuChipIcon,
+  QuestionMarkCircleIcon,
+  BookOpenIcon,
+  LinkIcon,
+  // Fix: Added missing icon import used in ImplementationStep component
   ArrowLongRightIcon
 } from '@heroicons/react/24/solid';
-import { matchAWSService } from '../services/gemini';
-import { ScenarioMatch } from '../types';
+import { matchAWSService, explainStepDetail } from '../services/gemini';
+import { ScenarioMatch, StepExplanation } from '../types';
 
 declare global {
   interface Window {
@@ -75,7 +78,6 @@ const MermaidDiagram: React.FC<{ definition: string }> = ({ definition }) => {
 
       try {
         setError(false);
-        // Initialize mermaid with specific enterprise styling
         window.mermaid.initialize({ 
           startOnLoad: false, 
           theme: 'dark',
@@ -95,10 +97,7 @@ const MermaidDiagram: React.FC<{ definition: string }> = ({ definition }) => {
           }
         });
 
-        // Generate a unique ID for the diagram
         const id = `mermaid-diag-${Math.random().toString(36).substring(2, 9)}`;
-        
-        // Use the async render method
         const { svg: svgCode } = await window.mermaid.render(id, definition);
         setSvg(svgCode);
       } catch (err) {
@@ -114,7 +113,7 @@ const MermaidDiagram: React.FC<{ definition: string }> = ({ definition }) => {
     return (
       <div className="bg-slate-900/50 rounded-2xl p-8 border border-rose-500/20 flex flex-col items-center justify-center text-center">
         <p className="text-rose-400 font-bold mb-2">Diagram Rendering Error</p>
-        <p className="text-slate-500 text-xs font-mono max-w-xs break-all opacity-50">{definition}</p>
+        <p className="text-slate-500 text-[10px] font-mono max-w-xs break-all opacity-50">{definition}</p>
       </div>
     );
   }
@@ -124,6 +123,115 @@ const MermaidDiagram: React.FC<{ definition: string }> = ({ definition }) => {
       className="bg-slate-900/50 rounded-[2rem] p-8 border border-white/5 overflow-x-auto min-h-[400px] flex items-center justify-center shadow-inner"
       dangerouslySetInnerHTML={{ __html: svg || '<div class="animate-pulse flex space-y-4 flex-col items-center"><div class="rounded-full bg-slate-800 h-10 w-10"></div><div class="h-2 bg-slate-800 rounded w-32"></div></div>' }}
     />
+  );
+};
+
+interface StepProps {
+  index: number;
+  phase: string;
+  details: string;
+  context: string;
+}
+
+const ImplementationStep: React.FC<StepProps> = ({ index, phase, details, context }) => {
+  const [explanation, setExplanation] = useState<StepExplanation | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleDeepDive = async () => {
+    if (explanation) {
+      setIsOpen(!isOpen);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const result = await explainStepDetail(phase, details, context);
+      setExplanation(result);
+      setIsOpen(true);
+    } catch (err) {
+      alert("Consulting architect failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="relative flex flex-col md:flex-row gap-8 items-start group">
+      <div className="hidden md:flex w-16 h-16 rounded-2xl bg-slate-900 border border-indigo-500/40 items-center justify-center z-10 shrink-0 group-hover:bg-indigo-600 group-hover:border-indigo-400 transition-all">
+        <span className="text-xl font-black text-white">{index + 1}</span>
+      </div>
+      <div className="flex-1 space-y-4">
+        <div className="bg-white/5 border border-white/5 rounded-3xl p-8 group-hover:bg-white/10 transition-all relative">
+          <h5 className="text-xl font-bold text-indigo-300 mb-3">{phase}</h5>
+          <p className="text-slate-400 leading-relaxed mb-6">{details}</p>
+          
+          <button 
+            onClick={handleDeepDive}
+            disabled={loading}
+            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+          >
+            {loading ? (
+              <ArrowPathIcon className="w-4 h-4 animate-spin" />
+            ) : isOpen ? (
+              <>Hide Architect Review <BoltIcon className="w-4 h-4" /></>
+            ) : (
+              <>Ask Architect: Analyze Jargon & Patterns <QuestionMarkCircleIcon className="w-4 h-4" /></>
+            )}
+          </button>
+        </div>
+
+        {/* Deep Dive Content */}
+        {isOpen && explanation && (
+          <div className="animate-fadeIn p-8 bg-blue-500/5 rounded-3xl border border-blue-500/20 space-y-8">
+            <div className="space-y-3">
+              <h6 className="flex items-center gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest">
+                <SparklesIcon className="w-4 h-4" /> Architect's Breakdown
+              </h6>
+              <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-line italic">
+                {explanation.explanation}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <h6 className="flex items-center gap-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                  <BookOpenIcon className="w-4 h-4" /> Technical Glossary
+                </h6>
+                <div className="space-y-3">
+                  {explanation.keyTerms.map((item, idx) => (
+                    <div key={idx} className="bg-black/20 p-4 rounded-xl border border-white/5">
+                      <p className="text-white text-xs font-bold mb-1">{item.term}</p>
+                      <p className="text-slate-400 text-[11px] leading-snug">{item.definition}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h6 className="flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                  <LinkIcon className="w-4 h-4" /> Official References
+                </h6>
+                <div className="flex flex-col gap-2">
+                  {explanation.documentationLinks.map((link, idx) => (
+                    <a 
+                      key={idx} 
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-4 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl group/link transition-all"
+                    >
+                      <span className="text-xs text-slate-300 font-medium">{link.title}</span>
+                      <ArrowLongRightIcon className="w-4 h-4 text-emerald-400 group-hover/link:translate-x-1 transition-transform" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -177,7 +285,7 @@ const ServiceMatcher: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-fadeIn">
+    <div className="max-w-6xl mx-auto space-y-12 animate-fadeIn pb-24">
       {/* Mode Selector & Blueprints */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex p-1.5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
@@ -356,15 +464,13 @@ const ServiceMatcher: React.FC = () => {
             <div className="space-y-10 relative">
               <div className="absolute left-8 top-0 bottom-0 w-[2px] bg-indigo-500/20 hidden md:block" />
               {result.implementationSteps.map((step, idx) => (
-                <div key={idx} className="relative flex flex-col md:flex-row gap-8 items-start group">
-                  <div className="hidden md:flex w-16 h-16 rounded-2xl bg-slate-900 border border-indigo-500/40 items-center justify-center z-10 shrink-0 group-hover:bg-indigo-600 group-hover:border-indigo-400 transition-all">
-                    <span className="text-xl font-black text-white">{idx + 1}</span>
-                  </div>
-                  <div className="flex-1 bg-white/5 border border-white/5 rounded-3xl p-8 group-hover:bg-white/10 transition-all">
-                    <h5 className="text-xl font-bold text-indigo-300 mb-3">{step.phase}</h5>
-                    <p className="text-slate-400 leading-relaxed">{step.details}</p>
-                  </div>
-                </div>
+                <ImplementationStep 
+                  key={idx} 
+                  index={idx} 
+                  phase={step.phase} 
+                  details={step.details} 
+                  context={result.justification}
+                />
               ))}
             </div>
           </div>

@@ -29,3 +29,9 @@ export interface ArchitectureReview {
   criticalFixes: string[];
   costOptimizationScore: string;
 }
+
+export interface StepExplanation {
+  explanation: string;
+  keyTerms: { term: string; definition: string }[];
+  documentationLinks: { title: string; url: string }[];
+}
