@@ -20,6 +20,13 @@ export interface ScenarioMatch {
   alternatives?: string[];
 }
 
+export interface SavedMatch {
+  id: string;
+  timestamp: number;
+  prompt: string;
+  match: ScenarioMatch;
+}
+
 export interface ArchitectureReview {
   pillarRatings: {
     pillar: string;
