@@ -18,6 +18,7 @@ export interface AWSModule {
   id: string;
   title: string;
   architectWhy: string;
+  masterSummary?: string; // New field for 300-500 word deep dive
   serviceSynergy: string;
   costTip: string;
   tags: string[];

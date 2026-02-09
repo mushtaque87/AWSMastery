@@ -16,7 +16,8 @@ import {
   CheckCircleIcon,
   BriefcaseIcon,
   LightBulbIcon,
-  LinkIcon
+  LinkIcon,
+  AcademicCapIcon
 } from '@heroicons/react/24/outline';
 import { SectionId, AWSModule } from './types';
 import { MODULES, CLOUDFORMATION_VPC } from './constants';
@@ -81,6 +82,24 @@ const App: React.FC = () => {
               </p>
             </section>
           </header>
+
+          {module.masterSummary && (
+            <section className="glass p-10 rounded-[3rem] border border-blue-500/10 bg-blue-500/[0.01] space-y-8">
+              <div className="flex items-center justify-between border-b border-white/5 pb-6">
+                <h3 className="text-xs font-black text-blue-400 uppercase tracking-[0.4em] flex items-center gap-2">
+                  <AcademicCapIcon className="w-5 h-5" /> Masterclass Executive Briefing
+                </h3>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Est. Reading: 3 Minutes</span>
+              </div>
+              <div className="prose prose-invert max-w-none">
+                <div className="text-slate-300 text-lg leading-relaxed space-y-6 font-light">
+                  {module.masterSummary.split('\n\n').map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
 
           <div className="space-y-10">
             {module.detailedTopics?.map((topic, i) => (
