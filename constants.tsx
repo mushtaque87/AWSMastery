@@ -122,7 +122,7 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "vpc-networking",
       title: "4. VPC Networking Foundations",
-      architectWhy: "The VPC is your digital fortress. Tiered isolation (Public/Private/Data) and the elimination of public IPs via PrivateLink are essential for modern security.",
+      architectWhy: "The VPC is your digital fortress. Tiered isolation (Public, Private, and Database subnets) and the elimination of public IPs via PrivateLink are essential for modern security.",
       serviceSynergy: "Uses VPC Endpoints (Interface and Gateway) to communicate with S3 or DynamoDB without traversing the public internet.",
       costTip: "Avoid high NAT Gateway data processing charges by using VPC Gateway Endpoints for S3 and DynamoDB—they are free.",
       tags: ["Networking", "VPC", "Security"],
@@ -140,25 +140,12 @@ export const MODULES: Record<string, AWSModule[]> = {
           resources: [
             { type: 'doc', title: "VPC Subnetting Basics", url: "https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html" }
           ]
-        },
-        {
-          title: "VPC Endpoints & PrivateLink",
-          description: "Connecting to AWS services or 3rd party APIs without internet exposure.",
-          keyPoints: [
-            "Interface Endpoints: ENIs powered by PrivateLink for internal service access.",
-            "Gateway Endpoints: Routing-based access for S3 and DynamoDB (free).",
-            "Privacy: Traffic never leaves the Amazon network backbone.",
-            "Transit Gateway: Centralized routing for multi-VPC and hybrid-cloud connectivity."
-          ],
-          resources: [
-            { type: 'video', title: "Deep Dive on AWS PrivateLink", url: "https://www.youtube.com/results?search_query=aws+privatelink+deep+dive" }
-          ]
         }
       ],
       useCases: [
         {
           title: "PCI-DSS Payment Processing",
-          description: "Host the payment processor in a private subnet with no NAT Gateway, using VPC Endpoints to upload logs directly to CloudWatch without any internet route."
+          description: "Host the payment processor in a private subnet with no NAT Gateway, using VPC Endpoints to upload logs directly to CloudWatch."
         }
       ]
     },
@@ -183,25 +170,12 @@ export const MODULES: Record<string, AWSModule[]> = {
           resources: [
             { type: 'doc', title: "S3 Consistency Model", url: "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel" }
           ]
-        },
-        {
-          title: "Storage Tiers & Lifecycle Management",
-          description: "Optimizing for cost without sacrificing the 11 9's of durability.",
-          keyPoints: [
-            "S3 Standard vs Glacier: Trade-offs in retrieval time vs storage cost.",
-            "Lifecycle Policies: Automating transitions to cheaper tiers (Standard-IA, OneZone-IA).",
-            "Intelligent Tiering: The 'Set and Forget' tier for unpredictable workloads.",
-            "Multi-Region Replication: Syncing data across buckets in different continents."
-          ],
-          resources: [
-            { type: 'video', title: "S3 Storage Classes Explained", url: "https://www.youtube.com/results?search_query=aws+s3+storage+classes" }
-          ]
         }
       ],
       useCases: [
         {
           title: "Healthcare Medical Imaging Archive",
-          description: "Store X-ray images in S3 Standard for 30 days, lifecycle them to Glacier Instant Retrieval for 7 years, and use Object Lock to prevent tampering."
+          description: "Store X-ray images in S3 Standard, lifecycle them to Glacier Instant Retrieval for 7 years, and use Object Lock to prevent tampering."
         }
       ]
     },
@@ -226,19 +200,6 @@ export const MODULES: Record<string, AWSModule[]> = {
           resources: [
             { type: 'doc', title: "EC2 Instance Types", url: "https://aws.amazon.com/ec2/instance-types/" }
           ]
-        },
-        {
-          title: "The Serverless Mindset",
-          description: "Decoupling execution from long-lived infrastructure to focus on value.",
-          keyPoints: [
-            "Lambda: Event-driven execution without managing a single server.",
-            "Event Sources: API Gateway, S3 triggers, SQS polling, and EventBridge.",
-            "Cold Starts: Managing initialization latency for customer-facing APIs.",
-            "Stateless Design: Why serverless requires external state (DynamoDB/ElastiCache)."
-          ],
-          resources: [
-            { type: 'video', title: "Serverless Architectural Patterns", url: "https://www.youtube.com/results?search_query=aws+serverless+patterns" }
-          ]
         }
       ],
       useCases: [
@@ -261,12 +222,11 @@ export const MODULES: Record<string, AWSModule[]> = {
           title: "The 6 Pillars of Excellence",
           description: "The core framework used to review every major architecture on AWS.",
           keyPoints: [
-            "Operational Excellence: Running and monitoring systems for value.",
             "Security: Protecting information, systems, and assets.",
             "Reliability: Recovering from infrastructure or service disruptions.",
             "Performance Efficiency: Using IT and computing resources efficiently.",
             "Cost Optimization: Avoiding unnecessary costs.",
-            "Sustainability: Minimizing the environmental impacts of running workloads."
+            "Operational Excellence & Sustainability: Running workloads for value and planet-friendly efficiency."
           ],
           resources: [
             { type: 'doc', title: "The Well-Architected Pillars", url: "https://docs.aws.amazon.com/wellarchitected/latest/framework/pillars.html" }
@@ -276,7 +236,7 @@ export const MODULES: Record<string, AWSModule[]> = {
       useCases: [
         {
           title: "Production Readiness Review (PRR)",
-          description: "Before launching a new bank core, the architect performs a review to find 'High Risk Issues' (HRIs) like missing Multi-AZ for the database."
+          description: "Before launching a new bank core, the architect performs a review to find 'High Risk Issues' (HRIs)."
         }
       ]
     },
@@ -295,44 +255,262 @@ export const MODULES: Record<string, AWSModule[]> = {
           keyPoints: [
             "Cost Explorer: Visualizing trends and identifying spikes.",
             "AWS Budgets: Setting custom alerts before you exceed your spend.",
-            "Compute Optimizer: AI-driven recommendations to reduce instance waste.",
-            "Unit Metrics: Measuring the cost per 1,000 requests or per active user."
+            "Sustainability: Designing architectures that consume less carbon by reducing unused compute cycles."
           ],
           resources: [
             { type: 'video', title: "FinOps on AWS Masterclass", url: "https://www.youtube.com/results?search_query=aws+finops+tutorial" }
-          ]
-        },
-        {
-          title: "Sustainability Pillar",
-          description: "Designing architectures that consume less carbon and cost.",
-          keyPoints: [
-            "Rightsizing: Reducing unused compute cycles.",
-            "Energy Efficient Hardware: Moving to Graviton processors.",
-            "Data Lifecycle: Not storing 'garbage data' forever.",
-            "Shared Resources: Using Multi-tenant services to maximize utilization."
-          ],
-          resources: [
-            { type: 'doc', title: "Sustainability Design Principles", url: "https://docs.aws.amazon.com/wellarchitected/latest/sustainability-pillar/design-principles-for-sustainability-in-the-cloud.html" }
           ]
         }
       ],
       useCases: [
         {
           title: "Reducing Cloud Bill by 30%",
-          description: "Identifying idle development environments using Cost Explorer and scheduling them to turn off after 6 PM using Instance Scheduler."
+          description: "Identifying idle development environments and scheduling them to turn off after hours."
         }
       ]
     }
   ],
   'core-services': [
     {
-      id: "lambda-serverless",
-      title: "Lambda & Serverless Compute",
-      architectWhy: "Removes infrastructure management to focus entirely on code and business value. Scales effortlessly from zero to peak demand.",
-      serviceSynergy: "Pairs with EventBridge for event-driven flows and DynamoDB for low-latency state management.",
-      costTip: "Switch to Graviton3 (ARM64) runtimes for 25% better performance at 20% lower cost.",
-      tags: ["Compute", "Serverless", "Scaling"],
-      documentationUrl: "https://docs.aws.amazon.com/lambda/latest/dg/welcome.html"
+      id: "relational-db",
+      title: "1. Relational Mastery (RDS & Aurora)",
+      architectWhy: "Choosing between standard RDS and cloud-native Aurora is a critical decision for performance, availability, and cost. Aurora's storage architecture is a fundamental departure from traditional SQL hosting.",
+      serviceSynergy: "Pairs with RDS Proxy to handle high-concurrency Lambda connections and Secrets Manager for automatic credential rotation.",
+      costTip: "Use Aurora Serverless v2 for unpredictable workloads and Reserved Instances for steady-state production nodes to save up to 60%.",
+      tags: ["Database", "SQL", "High-Availability"],
+      documentationUrl: "https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.html",
+      detailedTopics: [
+        {
+          title: "Aurora vs. Standard RDS",
+          description: "Deep dive into the Aurora distributed storage layer vs standard block storage (EBS) used by RDS.",
+          keyPoints: [
+            "Replication: Aurora replicates 6 copies of data across 3 AZs by default.",
+            "Self-Healing: Aurora storage nodes automatically repair segments without impacting DB performance.",
+            "Read Replicas: Aurora supports up to 15 replicas with sub-10ms lag.",
+            "Global Database: Cross-region replication with <1 second typical latency."
+          ],
+          resources: [
+            { type: 'video', title: "Amazon Aurora Deep Dive", url: "https://www.youtube.com/results?search_query=amazon+aurora+deep+dive" },
+            { type: 'doc', title: "RDS High Availability (Multi-AZ)", url: "https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.html" }
+          ]
+        }
+      ],
+      useCases: [
+        {
+          title: "Mission-Critical Banking Ledger",
+          description: "Utilize Aurora Multi-Master or Multi-AZ with Global Database for 99.99% availability and regional failover compliance."
+        }
+      ]
+    },
+    {
+      id: "nosql-persistence",
+      title: "2. NoSQL Persistence (DynamoDB)",
+      architectWhy: "DynamoDB offers 'single-digit millisecond' performance at any scale. Mastering Partition Keys and Global Secondary Indexes is the difference between a fast system and a bottlenecked one.",
+      serviceSynergy: "Streams data to Lambda for real-time event processing or Kinesis for downstream analytics.",
+      costTip: "Use On-Demand capacity for spiky workloads and Provisioned with Auto Scaling for predictable traffic to minimize costs.",
+      tags: ["NoSQL", "Performance", "Serverless"],
+      documentationUrl: "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html",
+      detailedTopics: [
+        {
+          title: "Data Modeling: Keys & Indexes",
+          description: "Moving from Relational thinking to Single-Table Design.",
+          keyPoints: [
+            "Partition Key (PK): Used to spread data across physical shards.",
+            "Global Secondary Indexes (GSI): Querying data on non-key attributes across all partitions.",
+            "DAX: In-memory caching for 10x read performance (microseconds).",
+            "TTL: Automatically purging transient data (e.g., session tokens) to save storage costs."
+          ],
+          resources: [
+            { type: 'video', title: "Rick Houlihan: DynamoDB Advanced Modeling", url: "https://www.youtube.com/results?search_query=rick+houlihan+dynamodb" }
+          ]
+        }
+      ],
+      useCases: [
+        {
+          title: "Social Media Feed & User Profiles",
+          description: "Using DynamoDB Global Tables to provide low-latency reads/writes for a globally distributed user base."
+        }
+      ]
+    },
+    {
+      id: "advanced-compute",
+      title: "3. Elastic Compute & Containers (ECS/Fargate)",
+      architectWhy: "While EC2 provides full control, ECS/Fargate removes the 'undifferentiated heavy lifting' of server management, allowing you to focus on the container lifecycle.",
+      serviceSynergy: "Integrates with App Mesh for service-discovery and CloudWatch Container Insights for granular monitoring.",
+      costTip: "Run non-critical workloads on Fargate Spot to reduce compute costs by up to 70% compared to On-Demand.",
+      tags: ["Compute", "Containers", "Orchestration"],
+      documentationUrl: "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html",
+      detailedTopics: [
+        {
+          title: "ECS vs EKS vs Fargate",
+          description: "Navigating the container orchestration landscape on AWS.",
+          keyPoints: [
+            "ECS: The native, integrated AWS orchestrator. Simple and powerful.",
+            "EKS: Managed Kubernetes for those requiring open-source compatibility.",
+            "Fargate: The serverless compute engine for containers. No instances to manage.",
+            "Task Definitions: The JSON blueprint for your application (vCPU, Memory, Ports)."
+          ],
+          resources: [
+            { type: 'doc', title: "ECS Best Practices", url: "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/best-practices.html" }
+          ]
+        }
+      ],
+      useCases: [
+        {
+          title: "Microservices Modernization",
+          description: "Breaking a monolith into 50+ Fargate-based microservices behind an Application Load Balancer."
+        }
+      ]
+    },
+    {
+      id: "storage-efs-ebs",
+      title: "4. File & Block Storage (EFS & EBS)",
+      architectWhy: "Not all data belongs in S3. EBS provides low-latency block storage for databases, while EFS offers shared, concurrent file access for distributed web fleets.",
+      serviceSynergy: "EFS mounts directly to Lambda functions or Fargate tasks for shared state across serverless execution.",
+      costTip: "Use EBS Snapshots and EFS Lifecycle Management (Infrequent Access) to move older files to cheaper tiers automatically.",
+      tags: ["Storage", "Block", "FileSystem"],
+      documentationUrl: "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html",
+      detailedTopics: [
+        {
+          title: "Throughput & Performance Modes",
+          description: "Understanding IOPS vs Throughput for storage performance.",
+          keyPoints: [
+            "EBS gp3: Provision throughput and IOPS independently. The modern standard.",
+            "EBS io2 Block Express: SAN-in-the-cloud performance for SAP/Oracle.",
+            "EFS Elastic Throughput: Automatically scales to meet spikes without pre-provisioning.",
+            "Mount Targets: Creating localized access points in each AZ for low-latency EFS access."
+          ],
+          resources: [
+            { type: 'video', title: "EBS vs EFS vs S3: When to use what?", url: "https://www.youtube.com/results?search_query=aws+ebs+efs+s3+comparison" }
+          ]
+        }
+      ],
+      useCases: [
+        {
+          title: "Shared Media CMS",
+          description: "Using EFS to provide a shared file system for a fleet of WordPress servers, allowing simultaneous file edits."
+        }
+      ]
+    },
+    {
+      id: "messaging-patterns",
+      title: "5. Messaging & Decoupling (SQS & SNS)",
+      architectWhy: "Decoupling is the key to resilience. SQS provides asynchronous buffer zones, while SNS enables massive-scale fan-out for notification-driven architectures.",
+      serviceSynergy: "Pairs with Lambda for automatic polling (SQS) and EventBridge for sophisticated routing logic.",
+      costTip: "Use SQS Long Polling (WaitTimeSeconds > 0) to reduce empty receives and significantly lower API costs.",
+      tags: ["Messaging", "Decoupling", "Serverless"],
+      documentationUrl: "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/welcome.html",
+      detailedTopics: [
+        {
+          title: "Fan-out & Asynchronous Processing",
+          description: "Architecting for reliability through asynchronous buffers.",
+          keyPoints: [
+            "SNS: Pub/Sub pattern. One event, 100,000+ subscribers (Email, SQS, Lambda).",
+            "SQS: Producer/Consumer pattern. Decouples processing speed from ingestion speed.",
+            "Dead Letter Queues (DLQ): Safely capturing failed messages for manual inspection.",
+            "FIFO Queues: Ensuring strict ordering and deduplication for financial transactions."
+          ],
+          resources: [
+            { type: 'doc', title: "SNS Topic Filtering", url: "https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html" }
+          ]
+        }
+      ],
+      useCases: [
+        {
+          title: "Order Fulfillment Workflow",
+          description: "App pushes to SNS; SNS fan-outs to SQS 'Inventory', SQS 'Shipping', and SQS 'Billing' for parallel processing."
+        }
+      ]
+    },
+    {
+      id: "api-management",
+      title: "6. API Gateway & Logic Layer",
+      architectWhy: "API Gateway is the front door to your microservices. It handles throttling, authentication, and caching so your compute layer doesn't have to.",
+      serviceSynergy: "Works with Cognito for user authentication and WAF to block SQL injection and cross-site scripting attacks.",
+      costTip: "Use HTTP APIs instead of REST APIs for simple proxy use cases to save up to 70% in costs and improve latency.",
+      tags: ["API", "Security", "Serverless"],
+      documentationUrl: "https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html",
+      detailedTopics: [
+        {
+          title: "Throttling & Usage Plans",
+          description: "Protecting your backend from 'The Thundering Herd'.",
+          keyPoints: [
+            "Throttling: Setting requests-per-second (RPS) limits per stage or per API key.",
+            "Usage Plans: Monetizing or restricting access for different customer tiers.",
+            "Custom Authorizers: Using Lambda to validate JWT tokens before hitting the endpoint.",
+            "VPC Integration: Securely calling private endpoints inside your VPC without IGW."
+          ],
+          resources: [
+            { type: 'video', title: "API Gateway Best Practices", url: "https://www.youtube.com/results?search_query=aws+api+gateway+best+practices" }
+          ]
+        }
+      ],
+      useCases: [
+        {
+          title: "Public Facing SaaS API",
+          description: "Deliver a RESTful API with Cognito Auth, WAF protection, and tiered usage plans for Free vs Premium users."
+        }
+      ]
+    },
+    {
+      id: "secrets-encryption",
+      title: "7. Secret Management & Encryption (KMS)",
+      architectWhy: "Never hardcode keys. KMS provides centralized management of cryptographic keys, while Secrets Manager handles the automatic rotation of DB credentials.",
+      serviceSynergy: "Integrated into almost every AWS service (S3, RDS, EBS) for transparent data-at-rest encryption.",
+      costTip: "Use KMS Alias names to simplify key rotation and management in your application code.",
+      tags: ["Security", "Identity", "Governance"],
+      documentationUrl: "https://docs.aws.amazon.com/kms/latest/developerguide/overview.html",
+      detailedTopics: [
+        {
+          title: "KMS & Secrets Manager Deep Dive",
+          description: "Protecting the data plane through modern cryptography.",
+          keyPoints: [
+            "Customer Managed Keys (CMK): Keys where you control the rotation and policy.",
+            "Automatic Rotation: Secrets Manager can automatically update RDS passwords and notify apps.",
+            "KMS Grant Policies: Fine-grained access control for who can decrypt data.",
+            "CloudHSM: Dedicated hardware modules for FIPS 140-2 Level 3 compliance."
+          ],
+          resources: [
+            { type: 'doc', title: "KMS Best Practices", url: "https://docs.aws.amazon.com/kms/latest/developerguide/best-practices.html" }
+          ]
+        }
+      ],
+      useCases: [
+        {
+          title: "PCI-DSS Data Protection",
+          description: "Encrypting Credit Card data in RDS using a CMK that is rotated every 90 days automatically by Secrets Manager."
+        }
+      ]
+    },
+    {
+      id: "cache-elasticache",
+      title: "8. Cache-Aside & Performance (ElastiCache)",
+      architectWhy: "Speed is a feature. ElastiCache (Redis/Memcached) reduces database load and improves application response times by orders of magnitude for hot data.",
+      serviceSynergy: "Often placed in front of RDS or DynamoDB to cache session states or frequent query results.",
+      costTip: "Use ElastiCache Serverless to pay only for the storage and compute you consume, avoiding over-provisioned node costs.",
+      tags: ["Performance", "Caching", "In-Memory"],
+      documentationUrl: "https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.html",
+      detailedTopics: [
+        {
+          title: "Redis vs Memcached Strategy",
+          description: "Choosing the right in-memory engine.",
+          keyPoints: [
+            "Redis: Supports complex data structures (Lists, Sets, Hashes) and persistence.",
+            "Memcached: Simple, multi-threaded, and highly efficient for plain object caching.",
+            "Global Datastore: Low-latency cross-region replication for Redis.",
+            "Auto-Failover: Multi-AZ support with primary/replica nodes for high availability."
+          ],
+          resources: [
+            { type: 'video', title: "Caching Strategies for SAA-C03", url: "https://www.youtube.com/results?search_query=aws+elasticache+redis+vs+memcached" }
+          ]
+        }
+      ],
+      useCases: [
+        {
+          title: "Leaderboards & Session Store",
+          description: "Using Redis Sorted Sets for a real-time gaming leaderboard with sub-millisecond updates."
+        }
+      ]
     }
   ],
   architecture: [
