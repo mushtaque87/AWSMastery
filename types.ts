@@ -47,3 +47,23 @@ export interface StepExplanation {
     code: string;
   }[];
 }
+
+export interface RoadmapTopic {
+  title: string;
+  summary: string;
+  level: 'associate' | 'principal';
+}
+
+export interface RoadmapDetail {
+  summary: string;
+  topics: RoadmapTopic[];
+  useCases: {
+    title: string;
+    description: string;
+  }[];
+  resources: {
+    type: 'doc' | 'video' | 'blog';
+    title: string;
+    url: string;
+  }[];
+}
