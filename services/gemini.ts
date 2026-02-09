@@ -58,22 +58,36 @@ export const explainStepDetail = async (phase: string, details: string, context:
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `You are a Lead Solutions Architect. A user is confused about a specific step in an AWS implementation plan.
+    contents: `You are a Lead Solutions Architect providing a Technical Execution Blueprint for a development team.
     
     Architecture Context: ${context}
-    Phase: ${phase}
-    Details: ${details}
+    Implementation Phase: ${phase}
+    Step Details: ${details}
     
     Provide:
-    1. A clear, expert-level explanation of why this step is necessary and what the technical jargon means.
-    2. A list of key technical terms used (like DLQ, Idempotency, Egress, etc.) with concise definitions.
-    3. 2-3 direct links to official AWS documentation (docs.aws.amazon.com) related to these services. Use the format: {"title": "Service Name", "url": "https://..."}`,
+    1. A deep-dive explanation of the technical "heavy lifting" involved.
+    2. 1-2 production-ready code snippets (e.g., Python Boto3 or Node.js AWS SDK v3) that solve the core problem of this step.
+       CRITICAL: Use multiple lines, proper indentation, and clear comments. DO NOT provide code in a single line. Format it for readability.
+    3. Key technical terms definitions.
+    4. Official AWS documentation links.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
         properties: {
           explanation: { type: Type.STRING },
+          codeSnippets: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                language: { type: Type.STRING },
+                code: { type: Type.STRING }
+              },
+              required: ["title", "language", "code"]
+            }
+          },
           keyTerms: {
             type: Type.ARRAY,
             items: {
@@ -97,7 +111,7 @@ export const explainStepDetail = async (phase: string, details: string, context:
             }
           }
         },
-        required: ["explanation", "keyTerms", "documentationLinks"]
+        required: ["explanation", "keyTerms", "documentationLinks", "codeSnippets"]
       }
     }
   });

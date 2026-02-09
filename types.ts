@@ -41,4 +41,9 @@ export interface StepExplanation {
   explanation: string;
   keyTerms: { term: string; definition: string }[];
   documentationLinks: { title: string; url: string }[];
+  codeSnippets?: {
+    title: string;
+    language: string;
+    code: string;
+  }[];
 }
