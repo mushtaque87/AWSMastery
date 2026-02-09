@@ -43,8 +43,7 @@ export const MODULES: Record<string, AWSModule[]> = {
           description: "Distinguishing between Security OF the Cloud (AWS) and Security IN the Cloud (Customer).",
           keyPoints: [
             "AWS Responsibility: Physical security, global infrastructure, and managed service software.",
-            "Customer Responsibility: Patching guest OS, encrypting data at rest/transit, and IAM.",
-            "Inherited Controls: How your SOC2/PCI compliance sits on top of AWS's existing certifications."
+            "Customer Responsibility: Patching guest OS, encrypting data at rest/transit, and IAM."
           ],
           resources: [
             { type: 'video', title: "Shared Responsibility Model Explained", url: "https://www.youtube.com/results?search_query=aws+shared+responsibility+model" }
@@ -82,7 +81,7 @@ export const MODULES: Record<string, AWSModule[]> = {
       id: "vpc-networking",
       title: "4. VPC Networking Foundations",
       architectWhy: "The VPC is your digital fortress. Tiered isolation (Public, Private, and Database subnets) and the elimination of public IPs via PrivateLink are essential for modern security.",
-      masterSummary: "The Virtual Private Cloud (VPC) is the networking foundation that gives you full control over your virtual network environment. Designing a modern VPC involves more than just setting up subnets; it requires a tiered approach to security. The standard architecture includes Public subnets (for ALBs and NAT Gateways), Private subnets (for application compute), and Isolated subnets (for databases with no route to the internet).\n\nAdvanced Networking Tactics:\n• PrivateLink: Connecting to AWS services or your own microservices over the AWS backbone without using the public internet.\n• Transit Gateway: A central hub to connect dozens of VPCs and on-premise networks, replacing the mess of peer-to-peer peering.\n• VPC Endpoints: Using Gateway Endpoints (for S3/DynamoDB) to keep traffic internal and avoid NAT Gateway processing costs.\n• Security Groups vs NACLs: Security Groups are stateful and operate at the instance level; NACLs are stateless and operate at the subnet boundary. A Lead Architect uses both for 'defense-in-depth'.",
+      masterSummary: "The Virtual Private Cloud (VPC) is the networking foundation that gives you full control over your virtual network environment. Designing a modern VPC involves more than just setting up subnets; it requires a tiered approach to security. The standard architecture includes Public subnets (for ALBs and NAT Gateways), Private subnets (for application compute), and Isolated subnets (for databases with no route to the internet).\n\nAdvanced Networking Tactics:\n• PrivateLink: Connecting to AWS services or your own microservices over the AWS backbone without using the public internet.\n• Transit Gateway: A central hub to connect dozens of VPCs and on-premise networks, replacing the mess of peer-to-peer peering.\n• VPC Endpoints: Using Gateway Endpoints (for S3/DynamoDB) to keep traffic internal and avoid NAT Gateway processing costs.\n• Security Groups vs NACLs: Security Groups are stateful and operate at the instance level; NACLs are stateless and operate at the subnet boundary.",
       serviceSynergy: "Uses VPC Endpoints (Interface and Gateway) to communicate with S3 or DynamoDB without traversing the public internet.",
       costTip: "Avoid high NAT Gateway data processing charges by using VPC Gateway Endpoints for S3 and DynamoDB—they are free.",
       tags: ["Networking", "VPC", "Security"],
@@ -107,7 +106,7 @@ export const MODULES: Record<string, AWSModule[]> = {
       id: "s3-backbone",
       title: "5. S3: The Data Backbone",
       architectWhy: "S3 is more than a bucket; it's the foundation for data lakes. Architects must master strong consistency, object locking for WORM compliance, and lifecycle governance.",
-      masterSummary: "Amazon S3 is the industry-standard object storage service, offering 99.999999999% (11 9's) of durability. It is the core of modern data lakes. In recent years, S3 has transitioned to 'Strong Consistency' for all operations, making it suitable for high-throughput transactional metadata storage. For architects, the primary task is optimizing for both security and cost across the storage lifecycle.\n\nKey Strategic Areas:\n• Storage Classes: Moving from S3 Standard to S3 Intelligent-Tiering or Glacier Deep Archive based on access patterns.\n• Object Locking: Enabling 'Write Once Read Many' (WORM) for legal and compliance data retention.\n• Access Control: Using S3 Access Points for large-scale multi-tenant environments and blocking all public access by default.\n• Performance: S3 Express One Zone provides 10x lower latency for performance-critical analytics and machine learning workloads.",
+      masterSummary: "Amazon S3 is the industry-standard object storage service, offering 99.999999999% (11 9's) of durability. It is the core of modern data lakes. In recent years, S3 has transitioned to 'Strong Consistency' for all operations, making it suitable for high-throughput transactional metadata storage. For architects, the primary task is optimizing for both security and cost across the storage lifecycle.\n\nKey Strategic Areas:\n• Storage Classes: Moving from S3 Standard to S3 Intelligent-Tiering or Glacier Deep Archive based on access patterns.\n• Object Locking: Enabling 'Write Once Read Many' (WORM) for legal and compliance data retention.\n• Access Control: Using S3 Access Points for large-scale multi-tenant environments and blocking all public access by default.",
       serviceSynergy: "Feeds data into Athena for serverless SQL queries and Glue for cataloging decentralized data sets.",
       costTip: "Enable S3 Intelligent-Tiering to automatically move data to lower-cost tiers based on access patterns without any management overhead.",
       tags: ["Storage", "Data-Lake", "Analytics"],
@@ -118,8 +117,7 @@ export const MODULES: Record<string, AWSModule[]> = {
           description: "Optimizing for cost without sacrificing the 11 9's of durability.",
           keyPoints: [
             "S3 Standard vs Glacier: Trade-offs in retrieval time vs storage cost.",
-            "Intelligent Tiering: The 'Set and Forget' tier for unpredictable workloads.",
-            "Multi-Region Replication: Syncing data across buckets globally."
+            "Intelligent Tiering: The 'Set and Forget' tier for unpredictable workloads."
           ],
           resources: [
             { type: 'video', title: "S3 Storage Classes Explained", url: "https://www.youtube.com/results?search_query=aws+s3+storage+classes" }
@@ -132,7 +130,7 @@ export const MODULES: Record<string, AWSModule[]> = {
       id: "compute-foundations",
       title: "6. Compute Foundations (EC2 to Lambda)",
       architectWhy: "Selecting between EC2 (Full Control), ECS/EKS (Container Orchestration), and Lambda (Serverless) depends on the workload's volatility and execution profile.",
-      masterSummary: "AWS Compute offers a spectrum of control and abstraction. EC2 (Infrastructure as a Service) provides raw OS-level control, while Lambda (Function as a Service) provides the ultimate abstraction where you only manage code. The 'missing middle' is fulfilled by ECS and EKS on Fargate, which provides 'Containerless' container orchestration. As an architect, your choice is driven by the 'Undifferentiated Heavy Lifting' you are willing to accept.\n\nCore Decision Matrix:\n• EC2: For legacy workloads, custom kernels, or high-performance HPC needing specific hardware.\n• ECS/EKS on Fargate: For modern microservices that benefit from Docker packaging but don't want to manage EC2 fleets.\n• Lambda: For event-driven, short-lived tasks (15 min limit) and bursty traffic that needs to scale to zero.\n• Graviton: Always look to ARM-based Graviton instances first to achieve up to 40% better price-performance over x86 counterparts.",
+      masterSummary: "AWS Compute offers a spectrum of control and abstraction. EC2 (Infrastructure as a Service) provides raw OS-level control, while Lambda (Function as a Service) provides the ultimate abstraction where you only manage code. As an architect, your choice is driven by the 'Undifferentiated Heavy Lifting' you are willing to accept.\n\nCore Decision Matrix:\n• EC2: For legacy workloads, custom kernels, or high-performance HPC needing specific hardware.\n• ECS/EKS on Fargate: For modern microservices that benefit from Docker packaging but don't want to manage EC2 fleets.\n• Lambda: For event-driven, short-lived tasks (15 min limit) and bursty traffic that needs to scale to zero.",
       serviceSynergy: "Combines Auto Scaling Groups with Application Load Balancers (ALB) to ensure the compute layer breathes with traffic demand.",
       costTip: "Leverage Compute Optimizer to find the 'goldilocks' instance size; under-provisioned hurts performance, over-provisioned wastes capital.",
       tags: ["Compute", "Serverless", "Scaling"],
@@ -157,7 +155,7 @@ export const MODULES: Record<string, AWSModule[]> = {
       id: "well-architected",
       title: "7. The Well-Architected Framework",
       architectWhy: "Provides a structured baseline to evaluate architectures across 6 pillars, ensuring durability, efficiency, and operational excellence.",
-      masterSummary: "The AWS Well-Architected Framework is the 'Architect's Bible'. It provides a consistent set of principles for evaluating architectures and implementing scalable designs. It is organized into 6 Pillars: Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, and Sustainability. For a Lead Architect, the Framework is not a checkbox; it is a conversation starter for risk management.\n\nPillar Highlights:\n• Reliability: Designing for failure using Multi-AZ and loose coupling.\n• Security: Using the Principle of Least Privilege and automated incident response.\n• Cost Optimization: Transitioning from 'Pay for Provisioned' to 'Pay for Usage'.\n• Sustainability: Minimizing the environmental impact of cloud workloads by maximizing resource utilization.\n• Performance Efficiency: Using serverless and managed services to scale without linear management effort.",
+      masterSummary: "The AWS Well-Architected Framework is the 'Architect's Bible'. It provides a consistent set of principles for evaluating architectures and implementing scalable designs. It is organized into 6 Pillars: Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, and Sustainability.\n\nPillar Highlights:\n• Reliability: Designing for failure using Multi-AZ and loose coupling.\n• Security: Using the Principle of Least Privilege and automated incident response.\n• Cost Optimization: Transitioning from 'Pay for Provisioned' to 'Pay for Usage'.\n• Sustainability: Minimizing the environmental impact of cloud workloads by maximizing resource utilization.",
       serviceSynergy: "Acts as the blueprint for using AWS Well-Architected Tool and Trusted Advisor to maintain production health.",
       costTip: "Prioritize the Sustainability Pillar to reduce resource waste, which directly aligns with lower monthly AWS bills.",
       tags: ["Strategy", "Framework", "Governance"],
@@ -182,7 +180,7 @@ export const MODULES: Record<string, AWSModule[]> = {
       id: "finops-sustainability",
       title: "8. Architectural FinOps & Sustainability",
       architectWhy: "Architects are now fiscal owners. Designing for sustainability (carbon reduction) naturally leads to designing for cost efficiency.",
-      masterSummary: "In 2026, the Lead Architect is also a 'Financial Architect'. FinOps is the practice of bringing financial accountability to the variable spend model of cloud. This involves shifting from central procurement to distributed ownership, where engineering teams are responsible for the cost impact of their code. Parallel to this is the Sustainability pillar, which focuses on the shared responsibility for the environment.\n\nStrategic FinOps Steps:\n• Cost Allocation: Using 'Business Unit' and 'Project' tags to identify precisely who is spending what.\n• Rightsizing: Continuously using Compute Optimizer to match resources to actual demand.\n• Purchasing Models: Moving from On-Demand to Savings Plans and Spot Instances for non-critical workloads.\n• Carbon Tracking: Using the Customer Carbon Footprint Tool to report on the CO2 impact of your architectural decisions.",
+      masterSummary: "In 2026, the Lead Architect is also a 'Financial Architect'. FinOps is the practice of bringing financial accountability to the variable spend model of cloud. This involves shifting from central procurement to distributed ownership, where engineering teams are responsible for the cost impact of their code.\n\nStrategic FinOps Steps:\n• Cost Allocation: Using 'Business Unit' and 'Project' tags to identify precisely who is spending what.\n• Rightsizing: Continuously using Compute Optimizer to match resources to actual demand.\n• Purchasing Models: Moving from On-Demand to Savings Plans and Spot Instances for non-critical workloads.",
       serviceSynergy: "Uses AWS Budgets and the Customer Carbon Footprint Tool to visualize the impact of technical decisions on spend and the planet.",
       costTip: "Tag resources by 'Project' and 'Owner'. Without cost-allocation tags, you cannot identify which architectural choice is driving costs.",
       tags: ["FinOps", "Cost", "Sustainability"],
@@ -208,8 +206,8 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "relational-db",
       title: "1. Relational Mastery (RDS & Aurora)",
-      architectWhy: "Choosing between standard RDS and cloud-native Aurora is a critical decision for performance, availability, and cost. Aurora's storage architecture is a fundamental departure from traditional SQL hosting.",
-      masterSummary: "Relational databases in the cloud have evolved from managed servers to distributed storage clusters. Amazon Aurora is the cloud-native flagship, offering 5x the performance of MySQL and 3x of PostgreSQL at 1/10th the cost of commercial engines. Aurora uses a log-structured storage system that replicates data 6 times across 3 AZs by default, providing unparalleled durability and zero-downtime failover.\n\nArchitectural Considerations:\n• Aurora Serverless v2: Instant scaling for unpredictable workloads, scaling compute capacity in 0.5 ACU increments.\n• Read Scaling: Up to 15 read replicas with sub-10ms replication lag.\n• Global Database: One-second cross-region replication for disaster recovery and local reads.\n• RDS Proxy: Essential for serverless (Lambda) architectures to manage thousands of concurrent SQL connections without exhausting database resources.",
+      architectWhy: "Choosing between standard RDS and cloud-native Aurora is a critical decision for performance, availability, and cost.",
+      masterSummary: "Relational databases in the cloud have evolved from managed servers to distributed storage clusters. Amazon Aurora is the cloud-native flagship, offering 5x the performance of MySQL and 3x of PostgreSQL at 1/10th the cost of commercial engines. Aurora uses a log-structured storage system that replicates data 6 times across 3 AZs by default, providing unparalleled durability and zero-downtime failover.\n\nArchitectural Considerations:\n• Aurora Serverless v2: Instant scaling for unpredictable workloads.\n• Read Scaling: Up to 15 read replicas with sub-10ms replication lag.\n• Global Database: One-second cross-region replication for disaster recovery.",
       serviceSynergy: "Pairs with RDS Proxy to handle high-concurrency Lambda connections and Secrets Manager for automatic credential rotation.",
       costTip: "Use Aurora Serverless v2 for unpredictable workloads and Reserved Instances for steady-state production nodes to save up to 60%.",
       tags: ["Database", "SQL", "High-Availability"],
@@ -220,7 +218,6 @@ export const MODULES: Record<string, AWSModule[]> = {
           description: "Deep dive into the Aurora distributed storage layer vs standard block storage (EBS).",
           keyPoints: [
             "6-Way Replication: Data is replicated 6 times across 3 AZs by default.",
-            "Log-Structured Storage: Only log records travel the network, not data pages.",
             "Read Replicas: Up to 15 replicas with sub-10ms lag."
           ],
           resources: [
@@ -233,8 +230,8 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "nosql-persistence",
       title: "2. NoSQL Persistence (DynamoDB)",
-      architectWhy: "DynamoDB offers 'single-digit millisecond' performance at any scale. Mastering Partition Keys and Global Secondary Indexes is the difference between a fast system and a bottlenecked one.",
-      masterSummary: "DynamoDB is the 'Gold Standard' for high-scale NoSQL. It is a key-value and document database that delivers single-digit millisecond performance at any scale. Unlike relational databases that struggle with horizontal scaling, DynamoDB is designed to scale infinitely. To succeed as an architect, you must unlearn relational normalization and embrace 'Single-Table Design'.\n\nKey Concepts:\n• Partition Key (PK) & Sort Key (SK): The foundation of your data modeling. PK determines physical location; SK determines ordering within the partition.\n• GSI & LSI: Global and Local Secondary Indexes allow you to query data using non-key attributes without performing expensive 'Scans'.\n• Streams & Lambda: Triggering downstream events whenever data changes (CDC - Change Data Capture).\n• Global Tables: Active-active multi-region replication for truly global applications.",
+      architectWhy: "DynamoDB offers 'single-digit millisecond' performance at any scale.",
+      masterSummary: "DynamoDB is the 'Gold Standard' for high-scale NoSQL. It is a key-value and document database that delivers single-digit millisecond performance at any scale. To succeed as an architect, you must unlearn relational normalization and embrace 'Single-Table Design'.\n\nKey Concepts:\n• Partition Key (PK) & Sort Key (SK): PK determines physical location; SK determines ordering within the partition.\n• GSI & LSI: Global and Local Secondary Indexes allow you to query data using non-key attributes.\n• Global Tables: Active-active multi-region replication for truly global applications.",
       serviceSynergy: "Streams data to Lambda for real-time event processing or Kinesis for downstream analytics.",
       costTip: "Use On-Demand capacity for spiky workloads and Provisioned with Auto Scaling for predictable traffic to minimize costs.",
       tags: ["NoSQL", "Performance", "Serverless"],
@@ -245,7 +242,6 @@ export const MODULES: Record<string, AWSModule[]> = {
           description: "Consolidating relational entities into a single DynamoDB table for performance.",
           keyPoints: [
             "PK and SK: Designing composite keys to support multiple query patterns.",
-            "GSI vs LSI: Global vs Local Secondary Indexes for non-key queries.",
             "Query vs Scan: Why Scans should be avoided in production."
           ],
           resources: [
@@ -258,8 +254,8 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "advanced-compute",
       title: "3. Elastic Compute & Containers (ECS/Fargate)",
-      architectWhy: "While EC2 provides full control, ECS/Fargate removes the 'undifferentiated heavy lifting' of server management, allowing you to focus on the container lifecycle.",
-      masterSummary: "Modern compute is container-centric. Amazon ECS is the AWS-native container orchestrator, while EKS is the managed Kubernetes alternative. For most architects, ECS on Fargate is the 'Sweet Spot'—providing the power of Docker without the overhead of managing EC2 fleets or patching servers.\n\nOrchestration Deep Dive:\n• Fargate: A serverless compute engine for containers. You pay for the vCPU and Memory your container actually uses.\n• ECS Task Definitions: The blueprint that defines CPU, memory, IAM roles, and logging for your container.\n• Capacity Providers: Automatically mixing On-Demand and Spot Fargate tasks to optimize cost and availability.\n• Service Discovery: Using Cloud Map or App Mesh to allow microservices to find and talk to each other securely within the VPC.",
+      architectWhy: "ECS/Fargate removes the 'undifferentiated heavy lifting' of server management.",
+      masterSummary: "Modern compute is container-centric. Amazon ECS is the AWS-native container orchestrator. For most architects, ECS on Fargate is the 'Sweet Spot'—providing the power of Docker without the overhead of managing EC2 fleets.\n\nOrchestration Deep Dive:\n• Fargate: A serverless compute engine for containers. You pay for the vCPU and Memory your container actually uses.\n• Service Discovery: Using Cloud Map or App Mesh to allow microservices to talk to each other securely.",
       serviceSynergy: "Integrates with App Mesh for service-discovery and CloudWatch Container Insights for granular monitoring.",
       costTip: "Run non-critical workloads on Fargate Spot to reduce compute costs by up to 70% compared to On-Demand.",
       tags: ["Compute", "Containers", "Orchestration"],
@@ -270,8 +266,7 @@ export const MODULES: Record<string, AWSModule[]> = {
           description: "AWS-native orchestration vs. Managed Kubernetes.",
           keyPoints: [
             "ECS: Simple, deep AWS integration, AWSVPC networking.",
-            "Fargate: Serverless compute engine for containers.",
-            "Task Definitions: The blueprint for container execution."
+            "Fargate: Serverless compute engine for containers."
           ],
           resources: [
             { type: 'video', title: "ECS vs EKS: Which to choose?", url: "https://www.youtube.com/results?search_query=aws+ecs+vs+eks" }
@@ -283,8 +278,8 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "storage-efs-ebs",
       title: "4. File & Block Storage (EFS & EBS)",
-      architectWhy: "Not all data belongs in S3. EBS provides low-latency block storage for databases, while EFS offers shared, concurrent file access for distributed web fleets.",
-      masterSummary: "Storage beyond S3 involves block and file-based systems. Amazon EBS is the persistent block storage for EC2, functioning like a physical SSD. Amazon EFS is a managed NFS file system that can be shared across thousands of instances and Lambda functions simultaneously.\n\nArchitectural Distinctions:\n• EBS Performance: Using gp3 volumes to provision IOPS and Throughput independently, or io2 Block Express for SAN-level performance (up to 256k IOPS).\n• EFS Scaling: A truly elastic system that scales storage and throughput automatically. Ideal for shared media repositories and content management systems.\n• Persistence in Containers: Mounting EFS volumes to Fargate tasks to maintain state across container restarts.\n• Backup & Recovery: Using AWS Backup for centralized management of EBS snapshots and EFS backups across multiple regions.",
+      architectWhy: "Not all data belongs in S3. EBS and EFS fulfill specific low-latency and shared-access requirements.",
+      masterSummary: "Storage beyond S3 involves block and file-based systems. Amazon EBS is the persistent block storage for EC2, functioning like a physical SSD. Amazon EFS is a managed NFS file system that can be shared across thousands of instances.\n\nArchitectural Distinctions:\n• EBS Performance: Using gp3 volumes to provision IOPS independently.\n• EFS Scaling: A truly elastic system that scales storage and throughput automatically.",
       serviceSynergy: "EFS mounts directly to Lambda functions or Fargate tasks for shared state across serverless execution.",
       costTip: "Use EBS Snapshots and EFS Lifecycle Management (Infrequent Access) to move older files to cheaper tiers automatically.",
       tags: ["Storage", "Block", "FileSystem"],
@@ -295,7 +290,6 @@ export const MODULES: Record<string, AWSModule[]> = {
           description: "Configuring IOPS and Throughput for intensive workloads.",
           keyPoints: [
             "gp3 Volumes: Separate performance from capacity.",
-            "io2 Block Express: SAN-like performance for SQL Server.",
             "Encryption: KMS-integrated protection for data-at-rest."
           ],
           resources: [
@@ -308,8 +302,8 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "messaging-patterns",
       title: "5. Messaging & Decoupling (SQS & SNS)",
-      architectWhy: "Decoupling is the key to resilience. SQS provides asynchronous buffer zones, while SNS enables massive-scale fan-out for notification-driven architectures.",
-      masterSummary: "Decoupling is the secret to building resilient, distributed systems. By inserting a message queue (SQS) or a notification topic (SNS) between microservices, you ensure that failures in one service do not cascade to others. This 'Loose Coupling' is a fundamental requirement for the Reliability pillar of Well-Architected.\n\nMessaging Patterns:\n• SQS (Queueing): Point-to-point communication where a message is processed by exactly one consumer. Use FIFO queues for strict ordering.\n• SNS (Pub/Sub): One-to-many fan-out. A single event (like 'Order Placed') can trigger Email, Billing, and Shipping services simultaneously.\n• EventBridge: The modern event bus that replaces complex SNS filtering logic with schema-based routing.\n• Dead Letter Queues (DLQ): Capturing failed messages for manual investigation without blocking the entire production pipeline.",
+      architectWhy: "Decoupling is the key to resilience. SQS provides asynchronous buffer zones, while SNS enables massive-scale fan-out.",
+      masterSummary: "Decoupling is the secret to building resilient, distributed systems. By inserting a message queue (SQS) or a notification topic (SNS) between microservices, you ensure that failures in one service do not cascade to others.\n\nMessaging Patterns:\n• SQS (Queueing): Point-to-point communication where a message is processed by exactly one consumer.\n• SNS (Pub/Sub): One-to-many fan-out. Trigger Email, Billing, and Shipping services simultaneously.",
       serviceSynergy: "Pairs with Lambda for automatic polling (SQS) and EventBridge for sophisticated routing logic.",
       costTip: "Use SQS Long Polling (WaitTimeSeconds > 0) to reduce empty receives and significantly lower API costs.",
       tags: ["Messaging", "Decoupling", "Serverless"],
@@ -320,7 +314,6 @@ export const MODULES: Record<string, AWSModule[]> = {
           description: "Architecting for reliability via asynchronous message queues.",
           keyPoints: [
             "Visibility Timeout: Preventing dual-processing of messages.",
-            "DLQs: Capturing failed messages for re-processing.",
             "FIFO Queues: Ensuring order and exactly-once processing."
           ],
           resources: [
@@ -333,8 +326,8 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "api-management",
       title: "6. API Gateway & Logic Layer",
-      architectWhy: "API Gateway is the front door to your microservices. It handles throttling, authentication, and caching so your compute layer doesn't have to.",
-      masterSummary: "Amazon API Gateway is a fully managed service that makes it easy for developers to create, publish, maintain, secure, and monitor APIs. It acts as the 'Front Door' for your microservices, handling the difficult tasks of authentication, throttling, and request validation so your compute layer (Lambda/Fargate) stays lean.\n\nAPI Strategy:\n• REST vs HTTP APIs: Use HTTP APIs for lower latency and 70% lower cost for simple proxy use cases. Use REST APIs for complex needs like Request Transformation and API Keys.\n• Security: Using Lambda Authorizers or Cognito User Pools to secure endpoints with JWT tokens.\n• Throttling & Caching: Protecting backends from 'Thundering Herd' spikes and reducing latency for frequently requested data.\n• Private APIs: Exposing internal services securely within a VPC without ever touching the public internet.",
+      architectWhy: "API Gateway is the front door to your microservices.",
+      masterSummary: "Amazon API Gateway acts as the 'Front Door' for your microservices, handling the difficult tasks of authentication, throttling, and request validation.\n\nAPI Strategy:\n• REST vs HTTP APIs: Use HTTP APIs for lower latency and 70% lower cost.\n• Security: Using Lambda Authorizers or Cognito User Pools.",
       serviceSynergy: "Works with Cognito for user authentication and WAF to block SQL injection and cross-site scripting attacks.",
       costTip: "Use HTTP APIs instead of REST APIs for simple proxy use cases to save up to 70% in costs and improve latency.",
       tags: ["API", "Security", "Serverless"],
@@ -345,7 +338,6 @@ export const MODULES: Record<string, AWSModule[]> = {
           description: "Managing the front door of your cloud architecture.",
           keyPoints: [
             "Throttling & Quotas: Protecting backends from request spikes.",
-            "Custom Authorizers: Using Lambda to validate JWT/OAuth tokens.",
             "Canary Deployments: Gradual rollout of new API versions."
           ],
           resources: [
@@ -358,8 +350,8 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "secrets-encryption",
       title: "7. Security & Secrets (KMS & Secrets Manager)",
-      architectWhy: "Data protection is non-negotiable. KMS provides centralized key management, while Secrets Manager automates the difficult task of rotating database credentials without application downtime.",
-      masterSummary: "Security is built on encryption and secret management. AWS KMS is the centralized service for managing cryptographic keys, integrated with almost every AWS service. Secrets Manager goes a step further by providing a vault for application secrets like database passwords and API keys, with the ability to rotate them automatically.\n\nArchitectural Deep Dive:\n• Envelop Encryption: Using a Master Key to encrypt Data Keys, which then encrypt the actual data. This minimizes network traffic for encryption operations.\n• Key Policies: The primary way to control access to KMS keys, independent of IAM users.\n• Automated Rotation: Secrets Manager can automatically update the password in an RDS database and update the secret vault simultaneously, ensuring credentials never go stale.\n• Multi-Region Secrets: Replicating secrets across regions to support global disaster recovery strategies.",
+      architectWhy: "Data protection is non-negotiable. KMS and Secrets Manager automate encryption and rotation.",
+      masterSummary: "Security is built on encryption and secret management. AWS KMS is the centralized service for managing cryptographic keys. Secrets Manager provides a vault for application secrets like database passwords.\n\nArchitectural Deep Dive:\n• Automated Rotation: Secrets Manager updates the password in an RDS database and the secret vault simultaneously.",
       serviceSynergy: "Secrets Manager integrates directly with RDS to update passwords and notify Lambda of the new secret.",
       costTip: "Consolidate keys where possible. Each KMS Customer Managed Key (CMK) has a monthly flat fee.",
       tags: ["Security", "Encryption", "Secrets"],
@@ -369,8 +361,7 @@ export const MODULES: Record<string, AWSModule[]> = {
           title: "KMS: Key Management Mastery",
           description: "Enveloping data in layers of cloud-native encryption.",
           keyPoints: [
-            "Symmetric vs Asymmetric: Choosing the right key type for your logic.",
-            "Key Rotation: Automating the replacement of key material annually.",
+            "Symmetric vs Asymmetric: Choosing the right key type.",
             "Secrets Manager: Automating credential rotation without downtime."
           ],
           resources: [
@@ -383,8 +374,8 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "cache-elasticache",
       title: "8. Caching & Performance (ElastiCache)",
-      architectWhy: "Speed is a competitive feature. ElastiCache reduces database load by keeping hot data in memory (Redis/Memcached), enabling sub-millisecond responses.",
-      masterSummary: "The most performant query is the one that never hits your database. Amazon ElastiCache is an in-memory data store that provides sub-millisecond latency for hot data. As a Lead Architect, caching is your primary tool for reducing database costs and improving user experience.\n\nCaching Strategies:\n• Redis vs Memcached: Use Redis for complex data structures (leaderboards, pub/sub) and persistence. Use Memcached for simple, multi-threaded object caching.\n• Cache-Aside Pattern: The application checks the cache; if a miss, it queries the DB and updates the cache.\n• Global Datastore: Replicating Redis clusters across regions for local, low-latency reads globally.\n• ElastiCache Serverless: In 2026, we utilize serverless caching to avoid provisioning nodes and scale based on actual workload throughput.",
+      architectWhy: "Speed is a competitive feature. ElastiCache reduces database load by keeping hot data in memory.",
+      masterSummary: "The most performant query is the one that never hits your database. Amazon ElastiCache provides sub-millisecond latency for hot data.\n\nCaching Strategies:\n• Redis vs Memcached: Use Redis for complex data structures. Use Memcached for simple object caching.\n• Global Datastore: Replicating Redis clusters across regions.",
       serviceSynergy: "Often used in tandem with RDS to implement the 'Cache-Aside' pattern or as a fast session store.",
       costTip: "Use ElastiCache Serverless for small/volatile workloads to avoid paying for idle node capacity.",
       tags: ["Performance", "Caching", "In-Memory"],
@@ -394,9 +385,8 @@ export const MODULES: Record<string, AWSModule[]> = {
           title: "Redis vs. Memcached Strategy",
           description: "Choosing the right in-memory engine for your specific data structure.",
           keyPoints: [
-            "Redis: Complex structures (Sets, Hashes), persistence, and pub/sub.",
-            "Cluster Mode: Partitioning data across multiple shards for extreme scale.",
-            "Global Datastore: Localized sub-millisecond reads in multiple regions."
+            "Redis: Complex structures (Sets, Hashes), persistence.",
+            "Global Datastore: Localized sub-millisecond reads."
           ],
           resources: [
             { type: 'video', title: "ElastiCache Overview", url: "https://www.youtube.com/results?search_query=aws+elasticache+overview" }
@@ -410,12 +400,102 @@ export const MODULES: Record<string, AWSModule[]> = {
     {
       id: "event-driven",
       title: "Event-Driven Modernization",
-      architectWhy: "Decouples services to improve fault tolerance and enable independent scaling. The gold standard for resilient, extensible microservices.",
-      masterSummary: "Event-Driven Architecture (EDA) is the ultimate realization of cloud-native design. In an EDA, services communicate by emitting events—immutable facts about what has happened. This is the opposite of the synchronous 'Request-Response' pattern, which often leads to distributed monoliths where failures cascade. Amazon EventBridge is the core of EDA on AWS, providing a serverless event bus that routes events based on sophisticated rules.\n\nWhy Architects Choose EDA:\n• Independent Scaling: The producer doesn't care how many consumers process the event or how fast they do it.\n• Resilience: If a consumer service is down, the event can be stored in a queue (SQS) and replayed later.\n• Extensibility: Adding a new feature (like sending a push notification after an order) only requires adding a new consumer rule, with zero changes to the original order-processing code.\n• Real-time Analytics: Events can be branched off to Kinesis for real-time dashboarding without impacting the production transaction flow.",
+      architectWhy: "Decouples services to improve fault tolerance and enable independent scaling. The gold standard for resilient microservices.",
+      masterSummary: "Event-Driven Architecture (EDA) is the ultimate realization of cloud-native design. In an EDA, services communicate by emitting events—immutable facts about what has happened. This is the opposite of the synchronous 'Request-Response' pattern, which often leads to distributed monoliths where failures cascade.\n\nWhy Architects Choose EDA:\n• Independent Scaling: The producer doesn't care how many consumers process the event or how fast they do it.\n• Resilience: If a consumer service is down, the event can be stored in a queue (SQS) and replayed later.\n• Extensibility: Adding a new feature only requires adding a new consumer rule, with zero changes to the original code.",
       serviceSynergy: "Centered around EventBridge as the backbone, connecting SNS, SQS, and Step Functions for complex orchestration.",
       costTip: "Replace constant API polling with EventBridge event-driven triggers to eliminate costs associated with idle compute cycles.",
       tags: ["Patterns", "Events", "Decoupling"],
-      documentationUrl: "https://aws.amazon.com/event-driven-architecture/"
+      documentationUrl: "https://aws.amazon.com/event-driven-architecture/",
+      detailedTopics: [
+        {
+          title: "EventBridge: The Modern Event Bus",
+          description: "Moving beyond simple point-to-point messaging to a centralized, rule-based event routing engine.",
+          keyPoints: [
+            "Schema Registry: Enforcing event contracts between teams.",
+            "EventBridge Pipes: Connecting sources to targets with built-in filtering.",
+            "Archive & Replay: Surviving catastrophic downstream failures by re-processing historical events."
+          ],
+          resources: [
+            { type: 'video', title: "EventBridge Advanced Patterns", url: "https://www.youtube.com/results?search_query=aws+eventbridge+advanced+patterns" }
+          ]
+        }
+      ],
+      useCases: [{ title: "Global E-Commerce Order Flow", description: "An 'OrderPlaced' event triggers payment processing, inventory updates, and loyalty point rewards simultaneously without a single direct API call." }]
+    },
+    {
+      id: "serverless-microservices",
+      title: "Serverless Microservices Pattern",
+      architectWhy: "Focus on business value by eliminating all server management. Ideal for high-velocity startup environments and scalable SaaS platforms.",
+      masterSummary: "The Serverless Microservices pattern represents the 'No-Ops' ideal. By combining API Gateway, Lambda, and DynamoDB, architects create a stack that scales from zero to peak demand in seconds without a single human administrator involved. In 2026, the focus has shifted from simple execution to 'Cold Start' optimization and 'Step Functions' orchestration.\n\nStrategic Advantages:\n• Pay-per-Value: Costs correlate 100% with usage, eliminating 'Idle Tax'.\n• Built-in Availability: Services like S3 and DynamoDB are multi-AZ by default.\n• Granular Security: Each Lambda function can have its own dedicated IAM role (Least Privilege per API endpoint).",
+      serviceSynergy: "Pairs Lambda with DynamoDB for state and Cognito for user-identity lifecycle management.",
+      costTip: "Monitor Lambda memory settings; doubling memory can often reduce execution time by more than 50%, resulting in lower net cost.",
+      tags: ["Serverless", "Microservices", "Scalability"],
+      documentationUrl: "https://aws.amazon.com/serverless/",
+      detailedTopics: [
+        {
+          title: "Orchestration with Step Functions",
+          description: "Moving from 'Spaghetti Lambda' calls to a managed, visual state machine.",
+          keyPoints: [
+            "Standard vs Express: Choosing between long-running auditability and high-volume performance.",
+            "Wait States & Callbacks: Integrating human approvals into automated workflows.",
+            "Error Handling: Declarative 'Catch' and 'Retry' logic outside of application code."
+          ],
+          resources: [
+            { type: 'video', title: "Step Functions Best Practices", url: "https://www.youtube.com/results?search_query=aws+step+functions+reinvent" }
+          ]
+        }
+      ],
+      useCases: [{ title: "Banking Loan Approval Workflow", description: "Orchestrate credit checks, ID verification, and risk analysis using Step Functions with a manual human approval step for high-risk applications." }]
+    },
+    {
+      id: "hybrid-connectivity",
+      title: "Resilient Hybrid Connectivity",
+      architectWhy: "Bridging the gap between on-premise data centers and the cloud with zero-latency and maximum security.",
+      masterSummary: "For most enterprises, the cloud is an extension of their existing data center. Hybrid connectivity patterns ensure that sensitive data can travel between AWS and local servers securely. This involves a mix of AWS Direct Connect for dedicated bandwidth and Site-to-Site VPN for encrypted failover. Transit Gateway acts as the 'Central Hub', managing thousands of VPC and on-prem connections in a simplified hub-and-spoke model.\n\nArchitectural Components:\n• Direct Connect (DX): 1Gbps to 100Gbps dedicated fiber connections bypassing the internet.\n• Transit Gateway (TGW): Eliminates complex VPC peering meshes.\n• PrivateLink: Exposing on-prem services to VPCs securely without NAT gateways.",
+      serviceSynergy: "Uses Route 53 Resolver to enable seamless DNS resolution across the hybrid boundary.",
+      costTip: "Use Direct Connect Gateway to share a single DX connection across multiple regions, significantly reducing port and circuit costs.",
+      tags: ["Networking", "Hybrid-Cloud", "Enterprise"],
+      documentationUrl: "https://aws.amazon.com/directconnect/",
+      detailedTopics: [
+        {
+          title: "Transit Gateway Masterclass",
+          description: "Simplifying network topology at scale while maintaining multi-account isolation.",
+          keyPoints: [
+            "Route Table Isolation: Separating Dev, Test, and Prod traffic at the network hub.",
+            "Network Manager: Visualizing global hybrid topology in a single dashboard.",
+            "Inter-Region Peering: Connecting Transit Gateways across the globe over the AWS backbone."
+          ],
+          resources: [
+            { type: 'video', title: "Transit Gateway Deep Dive", url: "https://www.youtube.com/results?search_query=aws+transit+gateway+deep+dive" }
+          ]
+        }
+      ],
+      useCases: [{ title: "Global Data Center Exit", description: "Systematically migrating 1,000+ servers while maintaining private connectivity to remaining on-prem mainframe systems via 10Gbps Direct Connect." }]
+    },
+    {
+      id: "multi-region-ha",
+      title: "Multi-Region High Availability",
+      architectWhy: "Survival against the failure of an entire AWS Region. Reserved for mission-critical banking, healthcare, and government systems.",
+      masterSummary: "Multi-Region architecture is the pinnacle of resilience. While AWS Regions are highly reliable, 'Black Swan' events can occur. Architects design 'Active-Active' or 'Active-Passive' (Warm Standby) systems that can failover across continents in under 60 seconds. This relies on global data services like DynamoDB Global Tables and Aurora Global Database, which handle cross-region synchronization automatically.\n\nFailover Strategies:\n• Pilot Light: Minimal resources (databases) running in the second region.\n• Warm Standby: A scaled-down version of the full stack always running.\n• Active-Active: Full traffic distributed across two regions via Route 53 Latency routing.",
+      serviceSynergy: "Combines Route 53 Health Checks with Global Accelerator for sub-second traffic shifting during regional outages.",
+      costTip: "Avoid Multi-Region unless explicitly required by RTO/RPO requirements, as it often doubles infrastructure and data transfer costs.",
+      tags: ["DR", "Resilience", "Global"],
+      documentationUrl: "https://aws.amazon.com/solutions/implementations/multi-region-application-architecture/",
+      detailedTopics: [
+        {
+          title: "Route 53 Global Traffic Management",
+          description: "Using DNS as the ultimate switch for global failover and latency optimization.",
+          keyPoints: [
+            "Latency Routing: Sending users to the nearest healthy region automatically.",
+            "Health Checks: Monitoring endpoint health and triggering automated DNS failover.",
+            "Geoproximity Routing: Shifting traffic based on geographic boundaries and 'Bias' settings."
+          ],
+          resources: [
+            { type: 'video', title: "Multi-Region Architecture Patterns", url: "https://www.youtube.com/results?search_query=aws+multi+region+architecture" }
+          ]
+        }
+      ],
+      useCases: [{ title: "Global Payment Processor", description: "Ensure 99.999% availability by running active-active stacks in us-east-1 and eu-west-1, with DynamoDB Global Tables maintaining a single source of truth for all transactions." }]
     }
   ]
 };
