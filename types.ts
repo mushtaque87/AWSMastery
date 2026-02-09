@@ -1,12 +1,32 @@
 
 export type SectionId = 'fundamentals' | 'core-services' | 'architecture' | 'labs' | 'matcher' | 'review' | 'roadmap';
 
+export interface ModuleResource {
+  type: 'doc' | 'video' | 'blog';
+  title: string;
+  url: string;
+}
+
+export interface ModuleTopic {
+  title: string;
+  description: string;
+  keyPoints: string[];
+  resources: ModuleResource[];
+}
+
 export interface AWSModule {
+  id: string;
   title: string;
   architectWhy: string;
   serviceSynergy: string;
   costTip: string;
   tags: string[];
+  documentationUrl: string;
+  detailedTopics?: ModuleTopic[];
+  useCases?: {
+    title: string;
+    description: string;
+  }[];
 }
 
 export interface ScenarioMatch {
@@ -52,6 +72,15 @@ export interface RoadmapTopic {
   title: string;
   summary: string;
   level: 'associate' | 'principal';
+  tutorial?: {
+    content: string;
+    keyPoints: string[];
+    resources: {
+      type: 'doc' | 'video' | 'blog';
+      title: string;
+      url: string;
+    }[];
+  };
 }
 
 export interface RoadmapDetail {
