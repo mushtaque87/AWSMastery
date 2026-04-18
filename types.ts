@@ -38,6 +38,8 @@ export interface ScenarioMatch {
     details: string;
   }[];
   mermaidDiagram: string;
+  terraformCode?: string;
+  cloudFormationCode?: string;
   alternatives?: string[];
 }
 
@@ -56,6 +58,9 @@ export interface ArchitectureReview {
   }[];
   criticalFixes: string[];
   costOptimizationScore: string;
+  terraformCode?: string;
+  cloudFormationCode?: string;
+  mermaidDiagram?: string;
 }
 
 export interface StepExplanation {

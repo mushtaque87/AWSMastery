@@ -1,13 +1,43 @@
 
-import React, { useState } from 'react';
-import { ShieldCheckIcon, SparklesIcon, ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
+import React, { useState, useEffect, useRef } from 'react';
+import { ShieldCheckIcon, SparklesIcon, ArrowPathIcon, ExclamationTriangleIcon, CodeBracketIcon, CommandLineIcon, PhotoIcon } from '@heroicons/react/24/solid';
 import { reviewArchitecture } from '../services/gemini';
 import { ArchitectureReview } from '../types';
+import IaCViewer from './IaCViewer';
+
+declare global {
+  interface Window {
+    mermaid: any;
+  }
+}
 
 const ArchitectureReviewer: React.FC = () => {
   const [description, setDescription] = useState('');
   const [result, setResult] = useState<ArchitectureReview | null>(null);
   const [loading, setLoading] = useState(false);
+  const [activeIacTab, setActiveIacTab] = useState<'terraform' | 'cloudformation'>('terraform');
+  const diagramRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (result?.mermaidDiagram && diagramRef.current && window.mermaid) {
+      const renderDiagram = async () => {
+        try {
+          // Reset the container first
+          diagramRef.current!.removeAttribute('data-processed');
+          diagramRef.current!.innerHTML = `<div class="mermaid">${result.mermaidDiagram}</div>`;
+          await window.mermaid.run({
+            nodes: [diagramRef.current]
+          });
+        } catch (error) {
+          console.error("Mermaid rendering failed", error);
+        }
+      };
+      
+      // Short delay to ensure DOM is ready
+      const timer = setTimeout(renderDiagram, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [result]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +56,7 @@ const ArchitectureReviewer: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn">
+    <div className="max-w-6xl mx-auto space-y-8 animate-fadeIn pb-20">
       <div className="glass p-10 rounded-[2.5rem] border border-indigo-500/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
         
@@ -39,7 +69,7 @@ const ArchitectureReviewer: React.FC = () => {
           </div>
           
           <p className="text-slate-400 mb-8 text-lg leading-relaxed">
-            Paste your current or proposed architecture description. Our Lead Solutions Architect AI will score it across the 6 pillars and identify single points of failure.
+            Paste your current or proposed architecture description. Our Lead Solutions Architect AI will score it across the 6 pillars, generate IaC blueprints, and visualize the optimized flow.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -76,68 +106,117 @@ const ArchitectureReviewer: React.FC = () => {
       </div>
 
       {result && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
-          {/* Pillar Ratings */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="glass p-8 rounded-[2rem] border border-white/10">
-              <h3 className="text-xl font-bold text-white mb-6">Pillar Performance</h3>
-              <div className="space-y-6">
-                {result.pillarRatings.map((rating, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-sm font-semibold text-slate-300">{rating.pillar}</span>
-                      <span className="text-sm font-bold text-blue-400">{rating.rating}/10</span>
+        <div className="space-y-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+            {/* Pillar Ratings */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="glass p-8 rounded-[2rem] border border-white/10">
+                <h3 className="text-xl font-bold text-white mb-6">Pillar Performance</h3>
+                <div className="space-y-6">
+                  {result.pillarRatings.map((rating, idx) => (
+                    <div key={idx} className="space-y-2">
+                      <div className="flex justify-between items-end">
+                        <span className="text-sm font-semibold text-slate-300">{rating.pillar}</span>
+                        <span className="text-sm font-bold text-blue-400">{rating.rating}/10</span>
+                      </div>
+                      <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-1000 ${rating.rating >= 8 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : rating.rating >= 5 ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]'}`}
+                          style={{ width: `${rating.rating * 10}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed italic">{rating.feedback}</p>
                     </div>
-                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-1000 ${rating.rating >= 8 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : rating.rating >= 5 ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]'}`}
-                        style={{ width: `${rating.rating * 10}%` }}
-                      />
-                    </div>
-                    <p className="text-xs text-slate-400 leading-relaxed italic">{rating.feedback}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass p-8 rounded-[2rem] border border-rose-500/20 bg-rose-500/[0.02]">
+                <div className="flex items-center gap-3 mb-6">
+                  <ExclamationTriangleIcon className="w-6 h-6 text-rose-500" />
+                  <h3 className="text-xl font-bold text-white">Critical Fixes Needed</h3>
+                </div>
+                <ul className="space-y-4">
+                  {result.criticalFixes.map((fix, idx) => (
+                    <li key={idx} className="flex gap-3 text-slate-300 text-sm leading-relaxed">
+                      <span className="text-rose-500 font-bold">!</span>
+                      {fix}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
 
-            <div className="glass p-8 rounded-[2rem] border border-rose-500/20 bg-rose-500/[0.02]">
-              <div className="flex items-center gap-3 mb-6">
-                <ExclamationTriangleIcon className="w-6 h-6 text-rose-500" />
-                <h3 className="text-xl font-bold text-white">Critical Fixes Needed</h3>
+            {/* Cost Score & Metadata */}
+            <div className="space-y-6">
+              <div className="glass p-8 rounded-[2rem] border border-emerald-500/20 flex flex-col items-center justify-center text-center py-12">
+                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">Cost Efficiency</h4>
+                <div className="text-6xl font-black text-white mb-4">{result.costOptimizationScore}</div>
+                <p className="text-sm text-slate-400">Projected savings potential compared to legacy architectures.</p>
               </div>
-              <ul className="space-y-4">
-                {result.criticalFixes.map((fix, idx) => (
-                  <li key={idx} className="flex gap-3 text-slate-300 text-sm leading-relaxed">
-                    <span className="text-rose-500 font-bold">!</span>
-                    {fix}
-                  </li>
-                ))}
-              </ul>
+
+              <div className="glass p-8 rounded-[2rem] border border-white/10">
+                <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">Maturity Status</h4>
+                <div className="space-y-4">
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                    <p className="text-white text-sm font-bold mb-1">Status</p>
+                    <p className="text-xs text-slate-400">Enterprise Ready (v2026.4)</p>
+                  </div>
+                  <button 
+                    onClick={() => {setResult(null); setDescription('');}}
+                    className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition-all"
+                  >
+                    Reset & Start Over
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Cost Score & Metadata */}
-          <div className="space-y-6">
-            <div className="glass p-8 rounded-[2rem] border border-emerald-500/20 flex flex-col items-center justify-center text-center py-12">
-              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">Cost Efficiency</h4>
-              <div className="text-6xl font-black text-white mb-4">{result.costOptimizationScore}</div>
-              <p className="text-sm text-slate-400">Projected savings potential compared to legacy architectures.</p>
+          {/* New Sections: Visuals and IaC */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Visual Architecture */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 px-2">
+                <PhotoIcon className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Optimized Architectural Blueprint</h3>
+              </div>
+              <div className="glass p-8 rounded-[2.5rem] border border-white/5 min-h-[400px] flex items-center justify-center bg-black/20">
+                <div ref={diagramRef} className="w-full flex justify-center" />
+              </div>
             </div>
 
-            <div className="glass p-8 rounded-[2rem] border border-white/10">
-              <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">Recommendation Level</h4>
-              <div className="space-y-4">
-                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                  <p className="text-white text-sm font-bold mb-1">Architecture Maturity</p>
-                  <p className="text-xs text-slate-400">Enterprise Grade 2026 Compliant</p>
+            {/* Infrastructure as Code */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <CodeBracketIcon className="w-5 h-5 text-emerald-400" />
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Automation Assets (IaC)</h3>
                 </div>
-                <button 
-                  onClick={() => {setResult(null); setDescription('');}}
-                  className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition-all"
-                >
-                  Start New Review
-                </button>
+                <div className="flex bg-white/5 p-1 rounded-lg border border-white/5">
+                  <button 
+                    onClick={() => setActiveIacTab('terraform')}
+                    className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${activeIacTab === 'terraform' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    Terraform
+                  </button>
+                  <button 
+                    onClick={() => setActiveIacTab('cloudformation')}
+                    className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-md transition-all ${activeIacTab === 'cloudformation' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    CloudFormation
+                  </button>
+                </div>
               </div>
+              
+              <div className="h-[400px] overflow-hidden rounded-[2.5rem]">
+                <IaCViewer 
+                  code={activeIacTab === 'terraform' ? result.terraformCode || '' : result.cloudFormationCode || ''} 
+                />
+              </div>
+              <p className="px-4 text-[10px] text-slate-500 font-medium italic">
+                * These templates follow the AWS Well-Architected Framework 2026 standards for security and reliability.
+              </p>
             </div>
           </div>
         </div>

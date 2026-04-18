@@ -12,10 +12,10 @@ export const matchAWSService = async (scenario: string): Promise<ScenarioMatch> 
     Requirements:
     1. A clear 'recommendedService'.
     2. A deep 'justification' explaining the 2026-era benefits.
-    3. A multi-phase 'implementationSteps' list. Each phase must be technically dense and specific (mentioning specific AWS features like Graviton3, S3 Express, EventBridge Pipes, DLQs, etc.).
-    4. A Mermaid.js diagram representing the service flow. 
-       IMPORTANT: Use valid Mermaid syntax. Avoid special characters in node labels unless quoted. Example: NodeA["Label with Space"]. Use 'graph TD'.
-    5. 'alternatives' for trade-off discussions.`,
+    3. A multi-phase 'implementationSteps' list. Each phase must be technically dense and specific.
+    4. A Mermaid.js diagram representing the optimized system flow. Use valid Mermaid syntax.
+    5. A complete Terraform configuration (.tf) and CloudFormation template (YAML) that implements this solution.
+    6. 'alternatives' for trade-off discussions.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -35,12 +35,14 @@ export const matchAWSService = async (scenario: string): Promise<ScenarioMatch> 
             }
           },
           mermaidDiagram: { type: Type.STRING },
+          terraformCode: { type: Type.STRING },
+          cloudFormationCode: { type: Type.STRING },
           alternatives: {
             type: Type.ARRAY,
             items: { type: Type.STRING }
           }
         },
-        required: ["recommendedService", "justification", "implementationSteps", "mermaidDiagram"]
+        required: ["recommendedService", "justification", "implementationSteps", "mermaidDiagram", "terraformCode", "cloudFormationCode"]
       }
     }
   });
@@ -129,7 +131,13 @@ export const reviewArchitecture = async (description: string): Promise<Architect
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
-    contents: `Review the following AWS architecture against the 6 Pillars of the Well-Architected Framework: "${description}".`,
+    contents: `You are a Principal Cloud Architect. Review the following AWS architecture description against the 6 Pillars of the Well-Architected Framework: "${description}".
+    
+    In addition to the ratings and fixes, please provide:
+    1. A complete Terraform configuration (.tf) that implements a best-practice version of this architecture. Use modern AWS provider syntax.
+    2. A complete CloudFormation template (YAML) that implements the same best-practice architecture.
+    3. A Mermaid.js diagram representing the optimized architecture. 
+       IMPORTANT: Use valid Mermaid syntax. Use 'graph TD'. Avoid special characters in node labels. Use quotes for long labels.`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -151,9 +159,12 @@ export const reviewArchitecture = async (description: string): Promise<Architect
             type: Type.ARRAY,
             items: { type: Type.STRING }
           },
-          costOptimizationScore: { type: Type.STRING }
+          costOptimizationScore: { type: Type.STRING },
+          terraformCode: { type: Type.STRING },
+          cloudFormationCode: { type: Type.STRING },
+          mermaidDiagram: { type: Type.STRING }
         },
-        required: ["pillarRatings", "criticalFixes", "costOptimizationScore"]
+        required: ["pillarRatings", "criticalFixes", "costOptimizationScore", "terraformCode", "cloudFormationCode", "mermaidDiagram"]
       }
     }
   });
