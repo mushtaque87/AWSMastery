@@ -7,6 +7,7 @@ import {
   Square3Stack3DIcon, 
   BeakerIcon, 
   MagnifyingGlassIcon,
+  GlobeAltIcon,
   ChevronRightIcon,
   ShieldCheckIcon,
   CalendarDaysIcon,
@@ -25,6 +26,7 @@ import ServiceMatcher from './components/ServiceMatcher';
 import IaCViewer from './components/IaCViewer';
 import ArchitectureReviewer from './components/ArchitectureReviewer';
 import RoadmapSection from './components/RoadmapSection';
+import GenericAdvisor from './components/GenericAdvisor';
 
 const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<SectionId>('fundamentals');
@@ -38,6 +40,7 @@ const App: React.FC = () => {
     { id: 'labs', name: 'Hands-on Labs', icon: BeakerIcon },
     { id: 'matcher', name: 'Service Matcher', icon: MagnifyingGlassIcon },
     { id: 'review', name: 'Architecture Review', icon: ShieldCheckIcon },
+    { id: 'generic-advisor', name: 'Global Architect', icon: GlobeAltIcon },
     { id: 'roadmap', name: '30-Day Roadmap', icon: CalendarDaysIcon },
   ];
 
@@ -206,6 +209,8 @@ const App: React.FC = () => {
         return <ServiceMatcher />;
       case 'review':
         return <ArchitectureReviewer />;
+      case 'generic-advisor':
+        return <GenericAdvisor />;
       case 'roadmap':
         return <RoadmapSection />;
       case 'labs':

@@ -4,40 +4,13 @@ import { ShieldCheckIcon, SparklesIcon, ArrowPathIcon, ExclamationTriangleIcon, 
 import { reviewArchitecture } from '../services/gemini';
 import { ArchitectureReview } from '../types';
 import IaCViewer from './IaCViewer';
-
-declare global {
-  interface Window {
-    mermaid: any;
-  }
-}
+import MermaidDiagram from './MermaidDiagram';
 
 const ArchitectureReviewer: React.FC = () => {
   const [description, setDescription] = useState('');
   const [result, setResult] = useState<ArchitectureReview | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeIacTab, setActiveIacTab] = useState<'terraform' | 'cloudformation'>('terraform');
-  const diagramRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (result?.mermaidDiagram && diagramRef.current && window.mermaid) {
-      const renderDiagram = async () => {
-        try {
-          // Reset the container first
-          diagramRef.current!.removeAttribute('data-processed');
-          diagramRef.current!.innerHTML = `<div class="mermaid">${result.mermaidDiagram}</div>`;
-          await window.mermaid.run({
-            nodes: [diagramRef.current]
-          });
-        } catch (error) {
-          console.error("Mermaid rendering failed", error);
-        }
-      };
-      
-      // Short delay to ensure DOM is ready
-      const timer = setTimeout(renderDiagram, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [result]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,7 +155,7 @@ const ArchitectureReviewer: React.FC = () => {
                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Optimized Architectural Blueprint</h3>
               </div>
               <div className="glass p-8 rounded-[2.5rem] border border-white/5 min-h-[400px] flex items-center justify-center bg-black/20">
-                <div ref={diagramRef} className="w-full flex justify-center" />
+                {result.mermaidDiagram && <MermaidDiagram definition={result.mermaidDiagram} />}
               </div>
             </div>
 

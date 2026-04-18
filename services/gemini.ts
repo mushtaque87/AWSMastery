@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { ScenarioMatch, ArchitectureReview, StepExplanation } from "../types";
+import { ScenarioMatch, ArchitectureReview, StepExplanation, GenericArchitecture, CloudMapping } from "../types";
 
 export const matchAWSService = async (scenario: string): Promise<ScenarioMatch> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -126,6 +126,8 @@ export const explainStepDetail = async (phase: string, details: string, context:
   }
 };
 
+
+
 export const reviewArchitecture = async (description: string): Promise<ArchitectureReview> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
@@ -173,5 +175,94 @@ export const reviewArchitecture = async (description: string): Promise<Architect
     return JSON.parse(response.text || "{}");
   } catch (e) {
     throw new Error("Failed to parse architect review");
+  }
+};
+
+export const designGenericArchitecture = async (scenario: string): Promise<GenericArchitecture> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-pro-preview',
+    contents: `You are a Global Principal Architect. Design a cloud-agnostic solution for: "${scenario}".
+    
+    Guidelines:
+    1. Use ONLY generic architecture terms (e.g., "Object Storage" instead of "S3").
+    2. Provide market-preferred tool suggestions (e.g. "Snowflake", "Redis", "Kafka", "PostgreSQL").
+    3. Generate a Mermaid.js diagram using 'graph TD' and generic labels.
+    4. Focus on fundamental design patterns (Microservices, Event-Driven, Layered).`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          solutionName: { type: Type.STRING },
+          conceptJustification: { type: Type.STRING },
+          genericComponents: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                category: { type: Type.STRING },
+                bestFitType: { type: Type.STRING },
+                marketPreferredTools: { type: Type.ARRAY, items: { type: Type.STRING } },
+                purpose: { type: Type.STRING }
+              },
+              required: ["category", "bestFitType", "marketPreferredTools", "purpose"]
+            }
+          },
+          mermaidDiagram: { type: Type.STRING }
+        },
+        required: ["solutionName", "conceptJustification", "genericComponents", "mermaidDiagram"]
+      }
+    }
+  });
+
+  try {
+    return JSON.parse(response.text || "{}");
+  } catch (e) {
+    throw new Error("Generic architecture design failed.");
+  }
+};
+
+export const mapToCloudProvider = async (genericDesign: GenericArchitecture, provider: 'AWS' | 'Azure' | 'GCP'): Promise<CloudMapping> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Translate this generic architecture into a specific implementation for ${provider}:
+    
+    ARCH: ${JSON.stringify(genericDesign)}
+    
+    Provide the service mapping and a matching Terraform snippet for this provider.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          provider: { type: Type.STRING },
+          serviceMap: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                genericPath: { type: Type.STRING },
+                targetService: { type: Type.STRING },
+                specificBenefit: { type: Type.STRING }
+              },
+              required: ["genericPath", "targetService", "specificBenefit"]
+            }
+          },
+          iascSnippet: { type: Type.STRING }
+        },
+        required: ["provider", "serviceMap", "iascSnippet"]
+      }
+    }
+  });
+
+  try {
+    const data = JSON.parse(response.text || "{}");
+    return { ...data, provider };
+  } catch (e) {
+    throw new Error(`Cloud mapping to ${provider} failed.`);
   }
 };

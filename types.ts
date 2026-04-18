@@ -1,5 +1,5 @@
 
-export type SectionId = 'fundamentals' | 'core-services' | 'architecture' | 'labs' | 'matcher' | 'review' | 'roadmap';
+export type SectionId = 'fundamentals' | 'core-services' | 'architecture' | 'labs' | 'matcher' | 'review' | 'roadmap' | 'generic-advisor';
 
 export interface ModuleResource {
   type: 'doc' | 'video' | 'blog';
@@ -89,16 +89,24 @@ export interface RoadmapTopic {
   };
 }
 
-export interface RoadmapDetail {
-  summary: string;
-  topics: RoadmapTopic[];
-  useCases: {
-    title: string;
-    description: string;
+export interface GenericArchitecture {
+  solutionName: string;
+  conceptJustification: string;
+  genericComponents: {
+    category: string; // e.g. "Database", "Compute"
+    bestFitType: string; // e.g. "Distributed NoSQL"
+    marketPreferredTools: string[]; // e.g. ["MongoDB", "Cassandra", "DynamoDB"]
+    purpose: string;
   }[];
-  resources: {
-    type: 'doc' | 'video' | 'blog';
-    title: string;
-    url: string;
+  mermaidDiagram: string;
+}
+
+export interface CloudMapping {
+  provider: 'AWS' | 'Azure' | 'GCP';
+  serviceMap: {
+    genericPath: string;
+    targetService: string;
+    specificBenefit: string;
   }[];
+  iascSnippet: string; // Terraform or specific IaC
 }
